@@ -3,13 +3,43 @@
 {% block title %}Ana Sayfa{% endblock %}
 
 {% block content %}
-<h1>🏠 Ana Sayfa</h1>
-<p>Akıllı Görev Yöneticisine Hoş Geldiniz!</p>
-<p>Bu uygulama NLP ile görevlerinizi otomatik kategorize eder.</p>
-
-<h3>Sayfalar:</h3>
-<ul>
-    <li><a href="/aboutme">Hakkımda</a></li>
-    <li><a href="/tasks">Görev Listesi</a></li>
-</ul>
+<div class="text-center py-5">
+    <h1 class="display-4">🎯 Akıllı Görev Yöneticisi</h1>
+    <p class="lead text-muted">NLP ile otomatik kategorilendirme ve önceliklendirme</p>
+    
+    <hr class="my-4">
+    
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h2>📋</h2>
+                    <h5 class="card-title">Görevleri Yönet</h5>
+                    <p class="card-text">Görevlerini ekle, düzenle, sil.</p>
+                    <a href="/tasks" class="btn btn-primary">Görevlere Git</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h2>🤖</h2>
+                    <h5 class="card-title">Akıllı NLP</h5>
+                    <p class="card-text">Görevler otomatik kategorilenir.</p>
+                    <a href="/add" class="btn btn-success">Görev Ekle</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h2>⚡</h2>
+                    <h5 class="card-title">Önceliklendirme</h5>
+                    <p class="card-text">Acil işler otomatik belirlenir.</p>
+                    <a href="/aboutme" class="btn btn-secondary">Hakkımda</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

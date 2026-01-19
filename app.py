@@ -133,15 +133,6 @@ def tasks():
 
 
 # ==========================================
-# SAYFA 4: İLETİŞİM
-# ==========================================
-# Adres: http://127.0.0.1:5000/iletisim
-@app.route('/iletisim')
-def iletisim():
-    pass
-
-
-# ==========================================
 # GÖREV EKLEME
 # ==========================================
 @app.route('/add', methods=['GET', 'POST'])
@@ -207,6 +198,15 @@ def complete_task(id):
     
     # Listeye dön
     return redirect(url_for('tasks'))
+
+
+# ==========================================
+# SAYFA 4: İLETİŞİM
+# ==========================================
+# Adres: http://127.0.0.1:5000/iletisim
+@app.route('/iletisim')
+def iletisim():
+    pass
 
 
 # ==========================================

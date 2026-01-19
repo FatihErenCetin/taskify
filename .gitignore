@@ -1,4 +1,3 @@
-```
 # Python
 __pycache__/
 *.py[cod]
@@ -27,4 +26,16 @@ instance/
 
 # Logs
 *.log
-```
+
+# Test
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebook (kullanırsan)
+.ipynb_checkpoints/
+
+# Distribution
+dist/
+build/
+*.egg-info/

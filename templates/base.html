@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Görev Yöneticisi{% endblock %}</title>
+    <!-- CSS Dosyasını Çağır -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body>
+    <!-- NAVBAR -->
+    <nav>
+        <a href="/">🏠 Ana Sayfa</a>
+        <a href="/tasks">📋 Görevler</a>
+        <a href="/add">➕ Yeni Görev</a>
+        <a href="/aboutme">👤 Hakkımda</a>
+    </nav>
+
+    <!-- İÇERİK -->
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>© 2026 Akıllı Görev Yöneticisi | Flask ile yapıldı 🐍</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Yeni Görev Ekle{% endblock %}
+
+{% block content %}
+<h1>➕ Yeni Görev Ekle</h1>
+
+<form method="POST" action="/add">
+    <div style="margin-bottom: 15px;">
+        <label for="baslik"><strong>Görev Başlığı:</strong></label><br>
+        <input type="text" 
+               id="baslik" 
+               name="baslik" 
+               placeholder="Örn: Rapor hazırla"
+               required
+               style="width: 100%; padding: 10px; margin-top: 5px;">
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+        <label for="aciklama"><strong>Açıklama (opsiyonel):</strong></label><br>
+        <textarea id="aciklama" 
+                  name="aciklama" 
+                  placeholder="Görev detayları..."
+                  rows="4"
+                  style="width: 100%; padding: 10px; margin-top: 5px;"></textarea>
+    </div>
+    
+    <button type="submit" style="background-color: #4f46e5; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+        ✅ Görevi Kaydet
+    </button>
+    
+    <a href="/tasks" style="margin-left: 10px;">İptal</a>
+</form>
+
+{% endblock %}

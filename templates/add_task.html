@@ -6,7 +6,7 @@
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="card">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header card-header-turuncu">
                 <h4 class="mb-0">➕ Yeni Görev Ekle</h4>
             </div>
             <div class="card-body">
@@ -30,9 +30,34 @@
                                   rows="3"
                                   placeholder="Görev detayları..."></textarea>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="oncelik" class="form-label"><strong>Öncelik:</strong></label>
+                        <select class="form-select" id="oncelik" name="oncelik">
+                            <option value="0" selected>🤖 Otomatik (NLP belirlesin)</option>
+                            <option value="1">🔴 Yüksek</option>
+                            <option value="2">🟡 Normal</option>
+                            <option value="3">🟢 Düşük</option>
+                        </select>
+                        <div class="form-text">Seçmezseniz NLP metne göre otomatik belirler.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="kategori" class="form-label"><strong>Kategori:</strong></label>
+                        <select class="form-select" id="kategori" name="kategori">
+                            <option value="NLP" selected>🤖 Otomatik (NLP belirlesin)</option>
+                            <option value="İş">🔴 İş</option>
+                            <option value="Kişisel">🟡 Kişisel</option>
+                            <option value="Sağlık">🟢 Sağlık</option>
+                            <option value="Eğitim">🔵 Eğitim</option>
+                            <option value="Finans">🟣 Finans</option>
+                            <option value="Genel">⚪ Genel</option>
+                        </select>
+                        <div class="form-text">Seçmezseniz NLP metne göre otomatik belirler.</div>
+                    </div>
                     
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-success">✅ Görevi Kaydet</button>
+                        <button type="submit" class="btn btn-turuncu">✅ Görevi Kaydet</button>
                         <a href="/tasks" class="btn btn-secondary">İptal</a>
                     </div>
                 </form>

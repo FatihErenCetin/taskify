@@ -16,9 +16,16 @@ KATEGORILER = {
     'Finans': ['fatura', 'ödeme', 'banka', 'kredi', 'vergi', 'maaş', 'para', 'hesap'],
 }
 
+KATEGORI_PUANLAR = {'İş': 3,
+                    'Kişisel': 1,
+                    'Sağlık': 5,
+                    'Eğitim': 2,
+                    'Finans': 4,
+                    'Genel': 1}
+
 # Öncelik anahtar kelimeleri
 ONCELIK_KELIMELERI = {
-    'yuksek': ['acil', 'hemen', 'bugün', 'kritik', 'önemli', 'urgent', 'yarın'],
+    'yuksek': ['acil', 'hemen', 'bugün', 'kritik', 'önemli', 'urgent', 'yarın', 'doktor', 'sağlık', 'randevu', 'mutlaka'],
     'dusuk': ['belki', 'bir ara', 'sonra', 'ileride', 'zaman olursa'],
 }
 
@@ -48,6 +55,17 @@ def oncelik_belirle(metin):
             return 3  # Düşük
     
     return 2  # Normal
+
+
+def oncelik_skoru(task):
+        # Öncelik ağırlığı (1=en acil → en düşük skor)
+        #print(f"Task Öncelik: {task.oncelik}, Kategori: {task.kategori}")
+        oncelik_agirlik = task.oncelik * 10000 / KATEGORI_PUANLAR[task.kategori]
+        
+        # Tarih ağırlığı (eski tarih = düşük skor = daha önce göster)
+        tarih_agirlik = task.olusturma_tarihi.timestamp() if task.olusturma_tarihi else 0
+        
+        return oncelik_agirlik + (tarih_agirlik / 1000000)
 
 
 # ============================================
@@ -90,7 +108,8 @@ class Task(db.Model):
     kategori = db.Column(db.String(50), default='Genel')      # 🆕
     oncelik = db.Column(db.Integer, default=2)                 # 🆕 (1=Yüksek, 2=Normal, 3=Düşük)
     olusturma_tarihi = db.Column(db.DateTime, default=datetime.utcnow)  # Oluşturulma tarihi
-    
+    tamamlanma_tarihi = db.Column(db.DateTime, nullable=True)
+
     def __repr__(self):
         return f'<Task {self.id}: {self.baslik}>'
 
@@ -127,10 +146,17 @@ def aboutme():
 # Adres: http://127.0.0.1:5000/tasks
 @app.route('/tasks')
 def tasks():
-    all_tasks = Task.query.all()
-    return render_template('tasklist.html', tasks=all_tasks)
-   
+    aktif_gorevler = Task.query.filter_by(tamamlandi=False).all()
 
+    aktif_gorevler_sirali = sorted(aktif_gorevler, key=oncelik_skoru)
+    
+    # Tamamlanmış görevler: tamamlanma tarihine göre (en yeni önce)
+    tamamlanan_gorevler = Task.query.filter_by(tamamlandi=True).order_by(Task.tamamlanma_tarihi.desc()).all()
+    
+    return render_template('tasklist.html', 
+                           aktif_gorevler=aktif_gorevler_sirali,
+                           tamamlanan_gorevler=tamamlanan_gorevler)
+   
 
 # ==========================================
 # GÖREV EKLEME
@@ -141,12 +167,24 @@ def add_task():
         # Formdan verileri al
         baslik = request.form['baslik']
         aciklama = request.form['aciklama']
+        secilen_oncelik = int(request.form['oncelik'])
+        secilen_kategori = request.form['kategori']
+        #print(f"Seçilen kategori: {secilen_kategori}, Seçilen öncelik: {secilen_oncelik}")
         
         # NLP ile kategori ve öncelik belirle
         tam_metin = baslik + ' ' + aciklama
-        kategori = kategori_belirle(tam_metin)
-        oncelik = oncelik_belirle(tam_metin)
+        #kategori = kategori_belirle(tam_metin)
+        if secilen_kategori == 'NLP':
+            kategori = kategori_belirle(tam_metin)
+        else:
+            kategori = secilen_kategori
 
+        if secilen_oncelik == 0:
+            oncelik = oncelik_belirle(tam_metin)
+        else:
+            oncelik = int(secilen_oncelik)
+        
+        #print(f"Seçilen kategori: {kategori}, Seçilen öncelik: {oncelik}")
         # Yeni görev oluştur
         yeni_gorev = Task(
             baslik=baslik,
@@ -192,6 +230,12 @@ def complete_task(id):
     
     # Durumu tersine çevir
     gorev.tamamlandi = not gorev.tamamlandi
+
+    # Tamamlanma tarihini kaydet/sıfırla
+    if gorev.tamamlandi:
+        gorev.tamamlanma_tarihi = datetime.utcnow()
+    else:
+        gorev.tamamlanma_tarihi = None
     
     # Kaydet
     db.session.commit()

@@ -1,7 +1,61 @@
 /* ==========================================
-   GÖREV YÖNETİCİSİ - ÖZEL STİLLER
-   Bootstrap'i tamamlayan ekstra stiller
+   TASKIFY - TURUNCU TEMA
    ========================================== */
+
+/* Bootstrap Primary Rengi Override */
+:root {
+    --bs-primary: #f97316;
+    --bs-primary-rgb: 249, 115, 22;
+    --turuncu: #f97316;
+    --turuncu-koyu: #ea580c;
+    --turuncu-acik: #fb923c;
+}
+
+/* Navbar turuncu */
+.navbar-turuncu {
+    background-color: var(--turuncu) !important;
+}
+
+/* Butonlar */
+.btn-turuncu {
+    background-color: var(--turuncu);
+    border-color: var(--turuncu);
+    color: white;
+}
+
+.btn-turuncu:hover {
+    background-color: var(--turuncu-koyu);
+    border-color: var(--turuncu-koyu);
+    color: white;
+}
+
+.btn-outline-turuncu {
+    color: var(--turuncu);
+    border-color: var(--turuncu);
+}
+
+.btn-outline-turuncu:hover {
+    background-color: var(--turuncu);
+    color: white;
+}
+
+/* Tablo başlık */
+.table-turuncu {
+    background-color: var(--turuncu) !important;
+    color: white;
+}
+
+/* Kartlar */
+.card-header-turuncu {
+    background-color: var(--turuncu);
+    color: white;
+}
+
+/* Badge */
+.badge-turuncu {
+    background-color: var(--turuncu);
+    color: white;
+}
 
 /* Öncelik renkleri */
 .oncelik-yuksek {
@@ -23,10 +77,18 @@
     opacity: 0.7;
 }
 
-/* Kategori badge özel renkleri */
-.kategori-is { background-color: #0d6efd; }
+/* Kategori badge renkleri */
+.kategori-is { background-color: #1969e0; }
 .kategori-kisisel { background-color: #6f42c1; }
 .kategori-saglik { background-color: #d63384; }
 .kategori-egitim { background-color: #fd7e14; }
 .kategori-finans { background-color: #20c997; }
 .kategori-genel { background-color: #6c757d; }
+
+/* Bölüm başlıkları */
+.section-title {
+    color: var(--turuncu);
+    border-bottom: 2px solid var(--turuncu);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}

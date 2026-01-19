@@ -1,5 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
 
@@ -11,7 +13,7 @@ from datetime import datetime
 KATEGORILER = {
     'İş': ['toplantı', 'meeting', 'rapor', 'sunum', 'müşteri', 'proje', 'mail', 'email', 'ofis', 'deadline'],
     'Kişisel': ['alışveriş', 'market', 'ev', 'aile', 'arkadaş', 'hediye', 'tatil', 'gezi', 'yemek'],
-    'Sağlık': ['doktor', 'hastane', 'ilaç', 'egzersiz', 'spor', 'koşu', 'diyet', 'randevu'],
+    'Sağlık': ['doktor', 'hastane', 'ilaç', 'egzersiz', 'spor', 'koşu', 'diyet', 'randevu', 'sağlık', 'ameliyat'],
     'Eğitim': ['ders', 'sınav', 'ödev', 'okul', 'kurs', 'kitap', 'öğren', 'çalış', 'eğitim'],
     'Finans': ['fatura', 'ödeme', 'banka', 'kredi', 'vergi', 'maaş', 'para', 'hesap'],
 }
@@ -82,17 +84,60 @@ app = Flask(__name__)
 # SQLite veritabanı dosyası (proje klasöründe oluşacak)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///taskify.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'gizli-anahtar-degistir-bunu-123!'  # Session için gerekli
+
 
 # Veritabanı nesnesini oluştur
 db = SQLAlchemy(app)
 
 
+# Flask-Login ayarları
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'  # Giriş yapılmamışsa yönlendir
+login_manager.login_message = 'Bu sayfayı görmek için giriş yapmalısınız.'
+login_manager.login_message_category = 'warning'
+
 
 # ==========================================
 # MODEL (TABLO) TANIMLAMASI
 # ==========================================
-# Bu sınıf = Veritabanındaki "Tasks" tablosu
 
+# ==========================================
+# KULLANICI TABLOSU
+# ==========================================
+class User(UserMixin, db.Model):
+    __tablename__ = 'users'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # İlişki: Kullanıcının görevleri
+    tasks = db.relationship('Task', backref='owner', lazy=True)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+
+# Flask-Login için kullanıcı yükleyici
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
+# ==========================================
+# GÖREV TABLOSU
+# ==========================================
+# Bu sınıf = Veritabanındaki "Tasks" tablosu
 class Task(db.Model):
     """
     Görev tablosu.
@@ -105,10 +150,14 @@ class Task(db.Model):
     baslik = db.Column(db.String(200), nullable=False)  # Görev başlığı (zorunlu)
     aciklama = db.Column(db.Text)  # Açıklama (opsiyonel)
     tamamlandi = db.Column(db.Boolean, default=False)  # Tamamlandı mı?
-    kategori = db.Column(db.String(50), default='Genel')      # 🆕
-    oncelik = db.Column(db.Integer, default=2)                 # 🆕 (1=Yüksek, 2=Normal, 3=Düşük)
+    kategori = db.Column(db.String(50), default='Genel')      # Kategori
+    oncelik = db.Column(db.Integer, default=2)                 # (1=Yüksek, 2=Normal, 3=Düşük)
     olusturma_tarihi = db.Column(db.DateTime, default=datetime.utcnow)  # Oluşturulma tarihi
     tamamlanma_tarihi = db.Column(db.DateTime, nullable=True)
+
+    # Kullanıcı ilişkisi
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
 
     def __repr__(self):
         return f'<Task {self.id}: {self.baslik}>'
@@ -121,7 +170,7 @@ class Task(db.Model):
 # ==========================================
 
 # ==========================================
-# SAYFA 1: ANA SAYFA
+# ANA SAYFA
 # ==========================================
 # Adres: http://127.0.0.1:5000/
 # "/" işareti = web sitesinin ana sayfası
@@ -131,28 +180,106 @@ def ana_sayfa():
 
 
 # ==========================================
-# SAYFA 2: HAKKIMDA
+# HAKKIMDA
 # ==========================================
 # Adres: http://127.0.0.1:5000/aboutme
 @app.route('/aboutme')
 def aboutme():
     return render_template('aboutme.html')
+
+# ==========================================
+# KAYIT OL
+# ==========================================
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('tasks'))
     
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        password2 = request.form['password2']
+        
+        # Validasyon
+        if password != password2:
+            flash('Şifreler eşleşmiyor!', 'danger')
+            return redirect(url_for('register'))
+        
+        if User.query.filter_by(username=username).first():
+            flash('Bu kullanıcı adı zaten alınmış!', 'danger')
+            return redirect(url_for('register'))
+        
+        if User.query.filter_by(email=email).first():
+            flash('Bu email zaten kayıtlı!', 'danger')
+            return redirect(url_for('register'))
+        
+        # Yeni kullanıcı oluştur
+        user = User(username=username, email=email)
+        user.set_password(password)
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        flash('Kayıt başarılı! Şimdi giriş yapabilirsiniz.', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('register.html')
 
 
 # ==========================================
-# SAYFA 3: GÖREVLER
+# GİRİŞ YAP
+# ==========================================
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('tasks'))
+    
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        user = User.query.filter_by(username=username).first()
+        
+        if user and user.check_password(password):
+            login_user(user)
+            flash(f'Hoş geldin, {user.username}!', 'success')
+            
+            # Giriş öncesi gitmek istediği sayfaya yönlendir
+            next_page = request.args.get('next')
+            return redirect(next_page if next_page else url_for('tasks'))
+        else:
+            flash('Kullanıcı adı veya şifre hatalı!', 'danger')
+    
+    return render_template('login.html')
+    
+
+# ==========================================
+# ÇIKIŞ YAP
+# ==========================================
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Başarıyla çıkış yaptınız.', 'info')
+    return redirect(url_for('mainpage'))
+
+
+# ==========================================
+# GÖREVLER
 # ==========================================
 # Adres: http://127.0.0.1:5000/tasks
 @app.route('/tasks')
+@login_required
 def tasks():
-    aktif_gorevler = Task.query.filter_by(tamamlandi=False).all()
+    # Sadece giriş yapan kullanıcının görevleri
+    aktif_gorevler = Task.query.filter_by(user_id=current_user.id, tamamlandi=False).all()
 
     aktif_gorevler_sirali = sorted(aktif_gorevler, key=oncelik_skoru)
     
     # Tamamlanmış görevler: tamamlanma tarihine göre (en yeni önce)
-    tamamlanan_gorevler = Task.query.filter_by(tamamlandi=True).order_by(Task.tamamlanma_tarihi.desc()).all()
-    
+    tamamlanan_gorevler = Task.query.filter_by(user_id=current_user.id, tamamlandi=True).order_by(Task.tamamlanma_tarihi.desc()).all()
+
     return render_template('tasklist.html', 
                            aktif_gorevler=aktif_gorevler_sirali,
                            tamamlanan_gorevler=tamamlanan_gorevler)
@@ -162,6 +289,7 @@ def tasks():
 # GÖREV EKLEME
 # ==========================================
 @app.route('/add', methods=['GET', 'POST'])
+@login_required
 def add_task():
     if request.method == 'POST':
         # Formdan verileri al
@@ -190,12 +318,15 @@ def add_task():
             baslik=baslik,
             aciklama=aciklama,
             kategori=kategori,
-            oncelik=oncelik
+            oncelik=oncelik,
+            user_id=current_user.id  # Kullanıcıya bağla
         )
 
         # Veritabanına ekle
         db.session.add(yeni_gorev)
         db.session.commit()
+
+        flash('Görev başarıyla eklendi!', 'success')
         
         # Görev listesine yönlendir
         return redirect(url_for('tasks'))
@@ -208,14 +339,22 @@ def add_task():
 # GÖREV SİLME
 # ==========================================
 @app.route('/delete/<int:id>')
+@login_required
 def delete_task(id):
     # Görevi bul
     gorev = Task.query.get_or_404(id)
     
+    # Yetki kontrolü
+    if gorev.user_id != current_user.id:
+        flash('Bu göreve erişim yetkiniz yok!', 'danger')
+        return redirect(url_for('tasks'))
+
     # Sil
     db.session.delete(gorev)
     db.session.commit()
     
+    flash('Görev silindi.', 'info')
+
     # Listeye dön
     return redirect(url_for('tasks'))
 
@@ -224,10 +363,16 @@ def delete_task(id):
 # GÖREV TAMAMLANDI İŞARETLE
 # ==========================================
 @app.route('/complete/<int:id>')
+@login_required
 def complete_task(id):
     # Görevi bul
     gorev = Task.query.get_or_404(id)
     
+    # Yetki kontrolü
+    if gorev.user_id != current_user.id:
+        flash('Bu göreve erişim yetkiniz yok!', 'danger')
+        return redirect(url_for('tasks'))
+
     # Durumu tersine çevir
     gorev.tamamlandi = not gorev.tamamlandi
 
@@ -245,7 +390,7 @@ def complete_task(id):
 
 
 # ==========================================
-# SAYFA 4: İLETİŞİM
+# İLETİŞİM
 # ==========================================
 # Adres: http://127.0.0.1:5000/iletisim
 @app.route('/iletisim')

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center" style="margin-top: 4vh;">
+    <div class="col-md-6 col-lg-5">
+        <a href="/" class="d-inline-flex align-items-center text-secondary mb-4" style="font-size: 0.9rem;">
+            <i class="bi bi-arrow-left me-2"></i>Görevlere Dön
+        </a>
+        
+        <div class="card">
+            <div class="card-header bg-transparent border-0 pt-4">
+                <h5 class="section-title mb-1">Görevi Düzenle</h5>
+                <p class="text-secondary mb-0" style="font-size: 0.9rem;">Görev detaylarını güncelle</p>
+            </div>
+            <div class="card-body">
+                <form action="/edit/{{ task.id }}" method="POST">
+                    <div class="mb-4">
+                        <label class="form-label">Yapılacak İş</label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-pencil input-icon"></i>
+                            <input type="text" name="title" class="form-control py-3" value="{{ task.title }}" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Son Tarih</label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-calendar3 input-icon"></i>
+                            <input type="date" name="deadline" class="form-control py-3" value="{{ task.deadline.strftime('%Y-%m-%d') }}" required>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-primary flex-grow-1 py-3">
+                            <i class="bi bi-check2 me-2"></i>Kaydet
+                        </button>
+                        <a href="/" class="btn btn-ghost py-3 px-4">İptal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

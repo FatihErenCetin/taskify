@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 75vh;">
+    <div class="col-md-5 col-lg-4">
+        <div class="text-center mb-5">
+            <div class="d-inline-flex align-items-center justify-content-center mb-4" style="width: 72px; height: 72px; background: var(--gradient-1); border-radius: 18px; font-size: 1.75rem;">
+                ✓
+            </div>
+            <h1 style="font-weight: 800; font-size: 2rem; margin-bottom: 0.5rem;">Tekrar Hoş Geldin</h1>
+            <p class="text-secondary">Hesabına giriş yap ve devam et</p>
+        </div>
+        
+        <div class="card glass-card">
+            <div class="card-body p-4">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="alert" style="background: rgba(255, 107, 107, 0.1); border-color: var(--danger); color: var(--danger);">
+                            <i class="bi bi-exclamation-circle me-2"></i>{{ messages[0] }}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                <form method="POST">
+                    <div class="mb-4">
+                        <label class="form-label">Kullanıcı Adı</label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-person input-icon"></i>
+                            <input type="text" name="username" class="form-control py-3" placeholder="Kullanıcı adını gir" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Şifre</label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-lock input-icon"></i>
+                            <input type="password" name="password" class="form-control py-3" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-3 mb-4">
+                        <i class="bi bi-arrow-right me-2"></i>Giriş Yap
+                    </button>
+                </form>
+                
+                <div class="text-center">
+                    <span class="text-muted">Hesabın yok mu?</span>
+                    <a href="/register" style="font-weight: 600; margin-left: 0.5rem;">Kayıt Ol</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

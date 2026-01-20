@@ -62,7 +62,15 @@ def oncelik_belirle(metin):
 def oncelik_skoru(task):
         # Öncelik ağırlığı (1=en acil → en düşük skor)
         #print(f"Task Öncelik: {task.oncelik}, Kategori: {task.kategori}")
-        oncelik_agirlik = task.oncelik * 10000 / KATEGORI_PUANLAR[task.kategori]
+
+        if task.son_tarih != None:
+            bugun = datetime.utcnow()
+            if task.son_tarih:
+                kalan_gun = (task.son_tarih - bugun).days + 1  # 0 gün kalmasın
+
+            oncelik_agirlik = task.oncelik * kalan_gun - KATEGORI_PUANLAR[task.kategori]
+        else:
+            oncelik_agirlik = task.oncelik * 10 - KATEGORI_PUANLAR[task.kategori]
         
         # Tarih ağırlığı (eski tarih = düşük skor = daha önce göster)
         tarih_agirlik = task.olusturma_tarihi.timestamp() if task.olusturma_tarihi else 0
@@ -154,7 +162,7 @@ class Task(db.Model):
     oncelik = db.Column(db.Integer, default=2)                 # (1=Yüksek, 2=Normal, 3=Düşük)
     olusturma_tarihi = db.Column(db.DateTime, default=datetime.utcnow)  # Oluşturulma tarihi
     tamamlanma_tarihi = db.Column(db.DateTime, nullable=True)
-
+    son_tarih = db.Column(db.DateTime, nullable=True)  # Due Date
     # Kullanıcı ilişkisi
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
@@ -178,6 +186,9 @@ class Task(db.Model):
 def ana_sayfa():
     return render_template('mainpage.html')
 
+@app.context_processor
+def inject_now():
+    return {'now': datetime.utcnow()}
 
 # ==========================================
 # HAKKIMDA
@@ -297,28 +308,39 @@ def add_task():
         aciklama = request.form['aciklama']
         secilen_oncelik = int(request.form['oncelik'])
         secilen_kategori = request.form['kategori']
+        son_tarih_str = request.form.get('son_tarih')
         #print(f"Seçilen kategori: {secilen_kategori}, Seçilen öncelik: {secilen_oncelik}")
         
         # NLP ile kategori ve öncelik belirle
+        # Kategori
         tam_metin = baslik + ' ' + aciklama
         #kategori = kategori_belirle(tam_metin)
         if secilen_kategori == 'NLP':
             kategori = kategori_belirle(tam_metin)
         else:
             kategori = secilen_kategori
-
+        # Öncelik
         if secilen_oncelik == 0:
             oncelik = oncelik_belirle(tam_metin)
         else:
             oncelik = int(secilen_oncelik)
         
         #print(f"Seçilen kategori: {kategori}, Seçilen öncelik: {oncelik}")
+
+        son_tarih = None
+        if son_tarih_str and son_tarih_str.strip():
+            try:
+                son_tarih = datetime.strptime(son_tarih_str, '%Y-%m-%d')
+            except ValueError:
+                son_tarih = None
+
         # Yeni görev oluştur
         yeni_gorev = Task(
             baslik=baslik,
             aciklama=aciklama,
             kategori=kategori,
             oncelik=oncelik,
+            son_tarih=son_tarih,
             user_id=current_user.id  # Kullanıcıya bağla
         )
 

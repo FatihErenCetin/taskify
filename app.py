@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -183,7 +183,11 @@ class Task(db.Model):
 # Adres: http://127.0.0.1:5000/
 # "/" işareti = web sitesinin ana sayfası
 @app.route('/')
-def ana_sayfa():
+def homepage_root_redirect():
+    return redirect(url_for('homepage'))
+
+@app.route('/homepage')
+def homepage():
     return render_template('mainpage.html')
 
 @app.context_processor
@@ -204,7 +208,7 @@ def aboutme():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('tasks'))
+        return redirect(url_for('profile_tasks'))
     
     if request.method == 'POST':
         username = request.form['username']
@@ -244,7 +248,7 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('tasks'))
+        return redirect(url_for('profile_tasks'))
     
     if request.method == 'POST':
         username = request.form['username']
@@ -258,7 +262,7 @@ def login():
             
             # Giriş öncesi gitmek istediği sayfaya yönlendir
             next_page = request.args.get('next')
-            return redirect(next_page if next_page else url_for('tasks'))
+            return redirect(next_page if next_page else url_for('profile_tasks'))
         else:
             flash('Kullanıcı adı veya şifre hatalı!', 'danger')
     
@@ -273,16 +277,16 @@ def login():
 def logout():
     logout_user()
     flash('Başarıyla çıkış yaptınız.', 'info')
-    return redirect(url_for('mainpage'))
+    return redirect(url_for('homepage'))
 
 
 # ==========================================
 # GÖREVLER
 # ==========================================
 # Adres: http://127.0.0.1:5000/tasks
-@app.route('/tasks')
+@app.route('/profile/tasks')
 @login_required
-def tasks():
+def profile_tasks():
     # Sadece giriş yapan kullanıcının görevleri
     aktif_gorevler = Task.query.filter_by(user_id=current_user.id, tamamlandi=False).all()
 
@@ -291,70 +295,96 @@ def tasks():
     # Tamamlanmış görevler: tamamlanma tarihine göre (en yeni önce)
     tamamlanan_gorevler = Task.query.filter_by(user_id=current_user.id, tamamlandi=True).order_by(Task.tamamlanma_tarihi.desc()).all()
 
+    # Debug log: kullanıcı ve görev sayıları
+    try:
+        app.logger.debug(f"Rendering profile_tasks for user_id={current_user.id}, aktif={len(aktif_gorevler_sirali)}, tamamlanan={len(tamamlanan_gorevler)}")
+    except Exception:
+        app.logger.debug('Rendering profile_tasks (could not read current_user or counts)')
+
     return render_template('tasklist.html', 
                            aktif_gorevler=aktif_gorevler_sirali,
                            tamamlanan_gorevler=tamamlanan_gorevler)
+
+
+# Debug endpoint to check authentication and task counts quickly
+@app.route('/debug/status')
+def debug_status():
+    try:
+        if current_user.is_authenticated:
+            aktif = Task.query.filter_by(user_id=current_user.id, tamamlandi=False).count()
+            tamam = Task.query.filter_by(user_id=current_user.id, tamamlandi=True).count()
+            return f"AUTHENTICATED: user={current_user.username} (id={current_user.id}) — aktif={aktif}, tamam={tamam}"
+        else:
+            return 'NOT AUTHENTICATED'
+    except Exception as e:
+        app.logger.exception('Error in debug_status')
+        return f'ERROR: {e}'
+
+@app.route('/tasks')
+def tasks_legacy_redirect():
+    return redirect(url_for('profile_tasks'))
    
 
 # ==========================================
 # GÖREV EKLEME
 # ==========================================
-@app.route('/add', methods=['GET', 'POST'])
+@app.route('/profile/tasks/add', methods=['POST'])
 @login_required
-def add_task():
+def profile_tasks_add():
+    # Formdan verileri al
+    baslik = request.form['baslik']
+    aciklama = request.form.get('aciklama', '')
+    secilen_oncelik = int(request.form['oncelik'])
+    secilen_kategori = request.form['kategori']
+    son_tarih_str = request.form.get('son_tarih')
+
+    # NLP ile kategori ve öncelik belirle
+    tam_metin = f"{baslik} {aciklama}"
+    if secilen_kategori == 'NLP':
+        kategori = kategori_belirle(tam_metin)
+    else:
+        kategori = secilen_kategori
+
+    if secilen_oncelik == 0:
+        oncelik = oncelik_belirle(tam_metin)
+    else:
+        oncelik = int(secilen_oncelik)
+
+    son_tarih = None
+    if son_tarih_str and son_tarih_str.strip():
+        try:
+            son_tarih = datetime.strptime(son_tarih_str, '%Y-%m-%d')
+        except ValueError:
+            son_tarih = None
+
+    yeni_gorev = Task(
+        baslik=baslik,
+        aciklama=aciklama,
+        kategori=kategori,
+        oncelik=oncelik,
+        son_tarih=son_tarih,
+        user_id=current_user.id
+    )
+
+    db.session.add(yeni_gorev)
+    db.session.commit()
+
+    flash('Görev başarıyla eklendi!', 'success')
+    return redirect(url_for('profile_tasks'))
+
+@app.route('/add', methods=['GET', 'POST'])
+def add_legacy_redirect():
+    # Eski sayfa: artık popup ile ekleniyor.
     if request.method == 'POST':
-        # Formdan verileri al
-        baslik = request.form['baslik']
-        aciklama = request.form['aciklama']
-        secilen_oncelik = int(request.form['oncelik'])
-        secilen_kategori = request.form['kategori']
-        son_tarih_str = request.form.get('son_tarih')
-        #print(f"Seçilen kategori: {secilen_kategori}, Seçilen öncelik: {secilen_oncelik}")
-        
-        # NLP ile kategori ve öncelik belirle
-        # Kategori
-        tam_metin = baslik + ' ' + aciklama
-        #kategori = kategori_belirle(tam_metin)
-        if secilen_kategori == 'NLP':
-            kategori = kategori_belirle(tam_metin)
-        else:
-            kategori = secilen_kategori
-        # Öncelik
-        if secilen_oncelik == 0:
-            oncelik = oncelik_belirle(tam_metin)
-        else:
-            oncelik = int(secilen_oncelik)
-        
-        #print(f"Seçilen kategori: {kategori}, Seçilen öncelik: {oncelik}")
+        return redirect(url_for('profile_tasks_add'))
+    return redirect(url_for('profile_tasks'))
 
-        son_tarih = None
-        if son_tarih_str and son_tarih_str.strip():
-            try:
-                son_tarih = datetime.strptime(son_tarih_str, '%Y-%m-%d')
-            except ValueError:
-                son_tarih = None
-
-        # Yeni görev oluştur
-        yeni_gorev = Task(
-            baslik=baslik,
-            aciklama=aciklama,
-            kategori=kategori,
-            oncelik=oncelik,
-            son_tarih=son_tarih,
-            user_id=current_user.id  # Kullanıcıya bağla
-        )
-
-        # Veritabanına ekle
-        db.session.add(yeni_gorev)
-        db.session.commit()
-
-        flash('Görev başarıyla eklendi!', 'success')
-        
-        # Görev listesine yönlendir
-        return redirect(url_for('tasks'))
-    
-    # GET ise formu göster
-    return render_template('add_task.html')
+@app.route('/user/<int:id>')
+@login_required
+def user_profile(id):
+    if current_user.id != id:
+        abort(403)
+    return redirect(url_for('profile_tasks'))
 
 
 # ==========================================
@@ -363,22 +393,28 @@ def add_task():
 @app.route('/delete/<int:id>')
 @login_required
 def delete_task(id):
-    # Görevi bul
-    gorev = Task.query.get_or_404(id)
-    
-    # Yetki kontrolü
-    if gorev.user_id != current_user.id:
-        flash('Bu göreve erişim yetkiniz yok!', 'danger')
-        return redirect(url_for('tasks'))
+    try:
+        # Görevi bul
+        gorev = Task.query.get_or_404(id)
+        
+        # Yetki kontrolü
+        if gorev.user_id != current_user.id:
+            flash('Bu göreve erişim yetkiniz yok!', 'danger')
+            return redirect(url_for('profile_tasks'))
 
-    # Sil
-    db.session.delete(gorev)
-    db.session.commit()
-    
-    flash('Görev silindi.', 'info')
+        # Sil
+        db.session.delete(gorev)
+        db.session.commit()
+        
+        flash('Görev silindi.', 'info')
 
-    # Listeye dön
-    return redirect(url_for('tasks'))
+    except Exception:
+        # Log the exception for debugging and show a friendly message
+        app.logger.exception('Görev silinirken hata oluştu:')
+        flash('Görev silinirken sunucuda bir hata oluştu. Lütfen tekrar deneyin.', 'danger')
+
+    # Listeye dön (her durumda)
+    return redirect(url_for('profile_tasks'))
 
 
 # ==========================================
@@ -387,28 +423,35 @@ def delete_task(id):
 @app.route('/complete/<int:id>')
 @login_required
 def complete_task(id):
-    # Görevi bul
-    gorev = Task.query.get_or_404(id)
-    
-    # Yetki kontrolü
-    if gorev.user_id != current_user.id:
-        flash('Bu göreve erişim yetkiniz yok!', 'danger')
-        return redirect(url_for('tasks'))
+    try:
+        # Görevi bul
+        gorev = Task.query.get_or_404(id)
+        
+        # Yetki kontrolü
+        if gorev.user_id != current_user.id:
+            flash('Bu göreve erişim yetkiniz yok!', 'danger')
+            return redirect(url_for('profile_tasks'))
 
-    # Durumu tersine çevir
-    gorev.tamamlandi = not gorev.tamamlandi
+        # Durumu tersine çevir
+        gorev.tamamlandi = not gorev.tamamlandi
 
-    # Tamamlanma tarihini kaydet/sıfırla
-    if gorev.tamamlandi:
-        gorev.tamamlanma_tarihi = datetime.utcnow()
-    else:
-        gorev.tamamlanma_tarihi = None
-    
-    # Kaydet
-    db.session.commit()
-    
+        # Tamamlanma tarihini kaydet/sıfırla
+        if gorev.tamamlandi:
+            gorev.tamamlanma_tarihi = datetime.utcnow()
+        else:
+            gorev.tamamlanma_tarihi = None
+        
+        # Kaydet
+        db.session.commit()
+
+        flash('Görev durumu güncellendi.', 'success')
+
+    except Exception:
+        app.logger.exception('Görev tamamlanırken hata oluştu:')
+        flash('Görev güncellenirken sunucuda bir hata oluştu. Lütfen tekrar deneyin.', 'danger')
+
     # Listeye dön
-    return redirect(url_for('tasks'))
+    return redirect(url_for('profile_tasks'))
 
 
 # ==========================================

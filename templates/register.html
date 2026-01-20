@@ -10,7 +10,7 @@
                 <h4 class="mb-0">📝 Üye Ol</h4>
             </div>
             <div class="card-body">
-                <form method="POST" action="/register">
+                <form method="POST" action="{{ url_for('register') }}">
                     <div class="mb-3">
                         <label for="username" class="form-label">Kullanıcı Adı:</label>
                         <input type="text" class="form-control" id="username" name="username" required>
@@ -35,7 +35,7 @@
                 </form>
                 
                 <hr>
-                <p class="text-center mb-0">Zaten üye misiniz? <a href="/login">Giriş Yap</a></p>
+                <p class="text-center mb-0">Zaten üye misiniz? <a href="{{ url_for('login') }}">Giriş Yap</a></p>
             </div>
         </div>
     </div>

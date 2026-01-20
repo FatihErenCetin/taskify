@@ -5,167 +5,143 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>📋 Görev Listesi</h1>
-    <a href="/add" class="btn btn-turuncu">➕ Yeni Görev</a>
+    <button type="button" class="btn btn-turuncu" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+        ➕ Yeni Görev
+    </button>
 </div>
 
-<!-- ==========================================
-     AKTİF GÖREVLER
-     ========================================== -->
+<!-- Yeni Görev Modal -->
+<div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTaskModalLabel">➕ Yeni Görev Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <form method="POST" action="{{ url_for('profile_tasks_add') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="baslik" class="form-label"><strong>Görev Başlığı:</strong></label>
+                        <input type="text" class="form-control" id="baslik" name="baslik"
+                               placeholder="Örn: Yarın acil toplantıya katıl" required>
+                        <div class="form-text">NLP otomatik olarak kategori ve öncelik belirleyebilir.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="aciklama" class="form-label"><strong>Açıklama (opsiyonel):</strong></label>
+                        <textarea class="form-control" id="aciklama" name="aciklama" rows="3"
+                                  placeholder="Görev detayları giriniz."></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="oncelik" class="form-label"><strong>Öncelik:</strong></label>
+                            <select class="form-select" id="oncelik" name="oncelik">
+                                <option value="0" selected>Otomatik (NLP belirlesin)</option>
+                                <option value="1">🔴 Yüksek</option>
+                                <option value="2">🟡 Normal</option>
+                                <option value="3">🟢 Düşük</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="kategori" class="form-label"><strong>Kategori:</strong></label>
+                            <select class="form-select" id="kategori" name="kategori">
+                                <option value="NLP" selected>Otomatik (NLP belirlesin)</option>
+                                <option value="İş">💼 İş</option>
+                                <option value="Kişisel">👤 Kişisel</option>
+                                <option value="Sağlık">🏥 Sağlık</option>
+                                <option value="Eğitim">📚 Eğitim</option>
+                                <option value="Finans">💰 Finans</option>
+                                <option value="Genel">📌 Genel</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="son_tarih" class="form-label"><strong>Son Tarih:</strong></label>
+                        <input type="date" class="form-control" id="son_tarih" name="son_tarih">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-turuncu">✅ Görevi Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Aktif Görevler -->
 <h3 class="section-title">⏳ Aktif Görevler ({{ aktif_gorevler|length }})</h3>
 
 {% if aktif_gorevler %}
-    <table class="table table-hover mb-5">
-        <thead class="table-turuncu">
-            <tr>
-                <th>Görev</th>
-                <th>Kategori</th>
-                <th>Öncelik</th>
-                <th>Kalan Süre</th>
-                <th>Son Tarih</th>
-                <th>Eklenme</th>
-                <th>İşlemler</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for task in aktif_gorevler %}
-            {% set bugun = now if now is defined else None %}
-            <tr>
-                <td>
-                    <strong>{{ task.baslik }}</strong>
-                    {% if task.aciklama %}
-                        <br><small class="text-muted">{{ task.aciklama }}</small>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if task.kategori == 'İş' %}
-                        <span class="badge bg-primary">💼 {{ task.kategori }}</span>
-                    {% elif task.kategori == 'Kişisel' %}
-                        <span class="badge bg-purple" style="background-color: #6f42c1;">👤 {{ task.kategori }}</span>
-                    {% elif task.kategori == 'Sağlık' %}
-                        <span class="badge bg-pink" style="background-color: #d63384;">🏥 {{ task.kategori }}</span>
-                    {% elif task.kategori == 'Eğitim' %}
-                        <span class="badge bg-orange" style="background-color: #fd7e14;">📚 {{ task.kategori }}</span>
-                    {% elif task.kategori == 'Finans' %}
-                        <span class="badge bg-teal" style="background-color: #20c997;">💰 {{ task.kategori }}</span>
+<table class="table table-hover mb-5">
+    <thead class="table-turuncu">
+        <tr>
+            <th>Görev</th>
+            <th>Kategori</th>
+            <th>Öncelik</th>
+            <th>Kalan Süre</th>
+            <th>Son Tarih</th>
+            <th>Eklenme</th>
+            <th>İşlemler</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for task in aktif_gorevler %}
+        <tr>
+            <td>
+                <strong>{{ task.baslik }}</strong>
+                {% if task.aciklama %}
+                    <br><small class="text-muted">{{ task.aciklama }}</small>
+                {% endif %}
+            </td>
+            <td>
+                {% if task.kategori == 'İş' %}<span class="badge bg-primary">{{ task.kategori }}</span>
+                {% elif task.kategori == 'Kişisel' %}<span class="badge bg-purple">{{ task.kategori }}</span>
+                {% elif task.kategori == 'Sağlık' %}<span class="badge bg-pink">{{ task.kategori }}</span>
+                {% elif task.kategori == 'Eğitim' %}<span class="badge bg-orange">{{ task.kategori }}</span>
+                {% elif task.kategori == 'Finans' %}<span class="badge bg-teal">{{ task.kategori }}</span>
+                {% else %}<span class="badge bg-secondary">{{ task.kategori }}</span>{% endif %}
+            </td>
+            <td>
+                {% if task.oncelik == 1 %}<span class="oncelik-yuksek">🔴 Yüksek</span>
+                {% elif task.oncelik == 2 %}<span class="oncelik-normal">🟡 Normal</span>
+                {% elif task.oncelik == 3 %}<span class="oncelik-dusuk">🟢 Düşük</span>
+                {% else %}<span class="oncelik-otomatik">🤖 Otomatik</span>{% endif %}
+            </td>
+            <td>
+                {% if task.son_tarih %}
+                    {% set kalan = (task.son_tarih - now).days %}
+                    {% if kalan < 0 %}
+                        <span class="badge bg-danger">⚠️ {{ -kalan }} gün gecikti!</span>
+                    {% elif kalan <= 7 %}
+                        <span class="badge bg-danger">⏰ {{ kalan }} gün var!</span>
+                    {% elif kalan <= 14 %}
+                        <span class="badge bg-warning">⏰ {{ kalan }} gün var!</span>
                     {% else %}
-                        <span class="badge bg-secondary">📌 {{ task.kategori }}</span>
+                        <span class="badge bg-info">⏰ {{ kalan }} gün var!</span>
                     {% endif %}
-                </td>
-                <td>
-                    {% if task.oncelik == 1 %}
-                        <span class="oncelik-yuksek">🔴 Yüksek</span>
-                    {% elif task.oncelik == 2 %}
-                        <span class="oncelik-normal">🟡 Normal</span>
-                    {% else %}
-                        <span class="oncelik-dusuk">🟢 Düşük</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if task.son_tarih != None %}
-                        {% set kalan = (task.son_tarih - now).days %}
-                        {% if kalan < 0 %}
-                            <span class="badge bg-danger">⚠️ {{ -kalan }} gün gecikti!</span>
-                        {% elif kalan > 0 and kalan <= 7 %}
-                            <span class="badge bg-danger">⏰ {{ kalan }} gün var!</span>
-                        {% elif kalan > 7 and kalan <= 14 %}
-                            <span class="badge bg-warning">⏰ {{ kalan }} gün var!</span>
-                        {% elif kalan > 14 and kalan <= 21 %}
-                            <span class="badge bg-info">⏰ {{ kalan }} gün var!</span>
-                        {% else %}
-                            <span class="badge bg-info">⏰ {{ kalan }} gün var!</span>
-                        {% endif %}
-                    {% else %}
-                        <span class="text-muted">-</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if task.son_tarih %}
-                        <span class="badge bg-info"> {{ task.son_tarih.strftime('%d.%m.%Y %H:%M') }} </span>
-                    {% else %}
-                        <span class="text-muted">-</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <small>{{ task.olusturma_tarihi.strftime('%d.%m.%Y %H:%M') if task.olusturma_tarihi else '-' }}</small>
-                </td>
-                <td>
-                    <a href="/complete/{{ task.id }}" class="btn btn-sm btn-success" title="Tamamla">
-                        ✅
-                    </a>
-                    <a href="/delete/{{ task.id }}" class="btn btn-sm btn-outline-danger" 
-                       onclick="return confirm('Silmek istediğine emin misin?')" title="Sil">
-                        🗑️
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                {% else %}
+                    <span class="text-muted">-</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if task.son_tarih %}
+                    <span class="badge bg-info">{{ task.son_tarih.strftime('%d.%m.%Y %H:%M') }}</span>
+                {% else %}<span class="text-muted">-</span>{% endif %}
+            </td>
+            <td><small>{{ task.olusturma_tarihi.strftime('%d.%m.%Y %H:%M') if task.olusturma_tarihi else '-' }}</small></td>
+            <td>
+                <a href="{{ url_for('complete_task', id=task.id) }}" class="btn btn-sm btn-success" title="Tamamla">Tamamlandı</a>
+                <a href="{{ url_for('delete_task', id=task.id) }}" class="btn btn-sm btn-outline-danger"
+                   onclick="return confirm('Silmek istediğine emin misin?')" title="Sil">Sil</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% else %}
-    <div class="alert alert-info mb-5">
-        🎉 Tüm görevler tamamlandı! <a href="/add" class="alert-link">Yeni görev ekle</a>
-    </div>
+<div class="alert alert-info mb-5">
+    Tüm görevler tamamlandı! <a href="#" class="alert-link" data-bs-toggle="modal" data-bs-target="#addTaskModal">Yeni görev ekle</a>
+</div>
 {% endif %}
 
-<!-- ==========================================
-     TAMAMLANMIŞ GÖREVLER
-     ========================================== -->
-<h3 class="section-title">✅ Tamamlanan Görevler ({{ tamamlanan_gorevler|length }})</h3>
-
-{% if tamamlanan_gorevler %}
-    <table class="table table-hover">
-        <thead class="table-secondary">
-            <tr>
-                <th>Görev</th>
-                <th>Kategori</th>
-                <th>Tamamlanma</th>
-                <th>İşlemler</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for task in tamamlanan_gorevler %}
-            <tr class="table-success">
-                <td>
-                    <strong class="tamamlandi">{{ task.baslik }}</strong>
-                    {% if task.aciklama %}
-                        <br><small class="text-muted tamamlandi">{{ task.aciklama }}</small>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if task.kategori == 'İş' %}
-                        <span class="badge bg-primary">💼 {{ task.kategori }}</span>
-                    {% elif task.kategori == 'Kişisel' %}
-                        <span class="badge bg-purple" style="background-color: #6f42c1;">👤 {{ task.kategori }}</span>
-                    {% elif task.kategori == 'Sağlık' %}
-                        <span class="badge bg-pink" style="background-color: #d63384;">🏥 {{ task.kategori }}</span>
-                    {% elif task.kategori == 'Eğitim' %}
-                        <span class="badge bg-orange" style="background-color: #fd7e14;">📚 {{ task.kategori }}</span>
-                    {% elif task.kategori == 'Finans' %}
-                        <span class="badge bg-teal" style="background-color: #20c997;">💰 {{ task.kategori }}</span>
-                    {% else %}
-                        <span class="badge bg-secondary">📌 {{ task.kategori }}</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <small>{{ task.tamamlanma_tarihi.strftime('%d.%m.%Y %H:%M') if task.tamamlanma_tarihi else '-' }}</small>
-                </td>
-                <td>
-                    <a href="/complete/{{ task.id }}" class="btn btn-sm btn-outline-warning" title="Geri Al">
-                        ↩️
-                    </a>
-                    <a href="/delete/{{ task.id }}" class="btn btn-sm btn-outline-danger" 
-                       onclick="return confirm('Silmek istediğine emin misin?')" title="Sil">
-                        🗑️
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <div class="alert alert-secondary">
-        Henüz tamamlanan görev yok.
-    </div>
-{% endif %}
-
-{% endblock %}
+{% endblock %} 

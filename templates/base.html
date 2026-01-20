@@ -16,7 +16,7 @@
     <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-dark navbar-turuncu mb-4">
         <div class="container">
-            <a class="navbar-brand" href="/">📋 Taskify</a>
+            <a class="navbar-brand" href="{{ url_for('homepage') }}">📋 TASKIFY</a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -26,13 +26,10 @@
                 <!-- Sol Menü -->
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">🏠 Ana Sayfa</a>
+                        <a class="nav-link" href="{{ url_for('homepage') }}">Ana Sayfa</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/tasks">📋 Görevler</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/add">➕ Yeni Görev</a>
+                        <a class="nav-link" href="{{ url_for('profile_tasks') }}">Görevler</a>
                     </li>
                 </ul>
                 
@@ -47,10 +44,10 @@
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="/login">🔑 Giriş Yap</a>
+                            <a class="nav-link" href="{{ url_for('login') }}">🔑 Giriş Yap</a>
                         </li>
                         <li class="nav-item">
-                            <a class="btn btn-light btn-sm ms-2" href="/register">📝 Üye Ol</a>
+                            <a class="btn btn-light btn-sm ms-2" href="{{ url_for('register') }}">📝 Üye Ol</a>
                         </li>
                     {% endif %}
                 </ul>

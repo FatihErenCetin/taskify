@@ -4,39 +4,42 @@
 
 {% block content %}
 <div class="text-center py-5">
-    <h1 class="display-4" style="color: var(--turuncu);">🎯 Taskify</h1>
-    <p class="lead text-muted">Akıllı Görev Yöneticisi - NLP ile otomatik kategorilendirme</p>
+    <h1 class="display-3 fw-bold" style="color: var(--turuncu);">🎯 Taskify</h1>
+    <p class="lead text-muted mb-5">Akıllı Görev Yöneticisi</p>
     
-    <hr class="my-4">
-    
-    <div class="row mt-5">
+    <div class="row g-4 justify-content-center">
+        <!-- Görevleri Yönet -->
         <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <h2>📋</h2>
-                    <h5 class="card-title">Görevleri Yönet</h5>
-                    <p class="card-text">Görevlerini ekle, düzenle, tamamla.</p>
-                    <a href="/tasks" class="btn btn-turuncu">Görevlere Git</a>
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body text-center py-5">
+                    <div class="display-1 mb-3">📋</div>
+                    <h5 class="card-title fw-bold mb-3">Görevleri Yönet</h5>
+                    <p class="card-text text-muted mb-4">Görevlerini ekle, düzenle ve tamamla. Takibini kolaylaştır.</p>
+                    <a href="{{ url_for('profile_tasks') }}" class="btn btn-turuncu btn-lg">Görevlere Git</a>
                 </div>
             </div>
         </div>
+
+        <!-- Akıllı NLP -->
         <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <h2>🤖</h2>
-                    <h5 class="card-title">Akıllı NLP</h5>
-                    <p class="card-text">Görevler otomatik kategorilenir.</p>
-                    <a href="/add" class="btn btn-turuncu">Görev Ekle</a>
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body text-center py-5">
+                    <div class="display-1 mb-3">🤖</div>
+                    <h5 class="card-title fw-bold mb-3">Akıllı NLP</h5>
+                    <p class="card-text text-muted mb-4">Görevler otomatik olarak kategorilenir ve önceliklendirilir.</p>
+                    <a href="{{ url_for('profile_tasks') }}" class="btn btn-turuncu btn-lg">Görev Ekle</a>
                 </div>
             </div>
         </div>
+
+        <!-- Önceliklendirme -->
         <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <h2>⚡</h2>
-                    <h5 class="card-title">Önceliklendirme</h5>
-                    <p class="card-text">Acil işler otomatik öne çıkar.</p>
-                    <a href="/tasks" class="btn btn-outline-turuncu">Görüntüle</a>
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body text-center py-5">
+                    <div class="display-1 mb-3">⚡</div>
+                    <h5 class="card-title fw-bold mb-3">Önceliklendirme</h5>
+                    <p class="card-text text-muted mb-4">Acil işler otomatik olarak öne çıkarılır.</p>
+                    <a href="{{ url_for('profile_tasks') }}" class="btn btn-outline-turuncu btn-lg">Görüntüle</a>
                 </div>
             </div>
         </div>

@@ -199,8 +199,9 @@ def inject_now():
 # ==========================================
 # Adres: http://127.0.0.1:5000/aboutme
 @app.route('/aboutme')
+@login_required
 def aboutme():
-    return render_template('aboutme.html')
+    return render_template('aboutme.html', user=current_user)
 
 # ==========================================
 # KAYIT OL

@@ -1,37 +1,96 @@
 {% extends 'base.html' %}
-
-{% block title %}Hakkımda{% endblock %}
+{% block title %}Profilim{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">👤 Hakkımda</h4>
-            </div>
-            <div class="card-body">
-                <table class="table table-borderless">
-                    <tr>
-                        <th width="150">İsim:</th>
-                        <td>Fatih</td>
-                    </tr>
-                    <tr>
-                        <th>Şehir:</th>
-                        <td>Ankara</td>
-                    </tr>
-                    <tr>
-                        <th>Meslek:</th>
-                        <td>Data Scientist</td>
-                    </tr>
-                    <tr>
-                        <th>Öğreniyorum:</th>
-                        <td>Python, Flask, Web Geliştirme</td>
-                    </tr>
-                </table>
-                
-                <a href="/" class="btn btn-outline-primary">← Ana Sayfaya Dön</a>
-            </div>
-        </div>
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+
+      <div class="card-header bg-primary text-white d-flex justify-content-between">
+        <h5 class="mb-0">👤 Profil Bilgilerim</h5>
+
+        {% if not edit_mode %}
+          <a href="{{ url_for('aboutme', edit=1) }}" class="btn btn-light btn-sm">
+            ✏️ Düzenle
+          </a>
+        {% endif %}
+      </div>
+
+      <div class="card-body">
+
+        <form method="POST">
+          <table class="table table-borderless align-middle">
+
+            <tr>
+              <th>Ad Soyad</th>
+              <td>
+                {% if edit_mode %}
+                  <input type="text" name="full_name" class="form-control"
+                         value="{{ user.full_name or '' }}">
+                {% else %}
+                  {{ user.full_name or '-' }}
+                {% endif %}
+              </td>
+            </tr>
+
+            <tr>
+              <th>Şehir</th>
+              <td>
+                {% if edit_mode %}
+                  <input type="text" name="city" class="form-control"
+                         value="{{ user.city or '' }}">
+                {% else %}
+                  {{ user.city or '-' }}
+                {% endif %}
+              </td>
+            </tr>
+
+            <tr>
+              <th>Meslek</th>
+              <td>
+                {% if edit_mode %}
+                  <input type="text" name="job" class="form-control"
+                         value="{{ user.job or '' }}">
+                {% else %}
+                  {{ user.job or '-' }}
+                {% endif %}
+              </td>
+            </tr>
+
+            <tr>
+              <th>Beceriler</th>
+              <td>
+                {% if edit_mode %}
+                  <input type="text" name="skills" class="form-control"
+                         value="{{ user.skills or '' }}">
+                {% else %}
+                  {{ user.skills or '-' }}
+                {% endif %}
+              </td>
+            </tr>
+
+            <tr>
+              <th>E-posta</th>
+              <td>{{ user.email }}</td>
+            </tr>
+
+          </table>
+
+          {% if edit_mode %}
+          <div class="d-flex justify-content-end gap-2">
+            <a href="{{ url_for('aboutme') }}" class="btn btn-secondary">
+              Vazgeç
+            </a>
+            <button class="btn btn-success">
+              💾 Kaydet
+            </button>
+          </div>
+          {% endif %}
+        </form>
+
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
+

@@ -123,6 +123,12 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # 👇 PROFİL ALANLARI (EKSİK OLANLAR)
+    full_name = db.Column(db.String(100))
+    city = db.Column(db.String(50))
+    job = db.Column(db.String(100))
+    skills = db.Column(db.String(200))
+    
     # İlişki: Kullanıcının görevleri
     tasks = db.relationship('Task', backref='owner', lazy=True)
     
@@ -198,10 +204,26 @@ def inject_now():
 # HAKKIMDA
 # ==========================================
 # Adres: http://127.0.0.1:5000/aboutme
-@app.route('/aboutme')
+@app.route('/aboutme', methods=['GET', 'POST'])
 @login_required
 def aboutme():
-    return render_template('aboutme.html', user=current_user)
+    edit_mode = request.args.get('edit') == '1'
+
+    if request.method == 'POST':
+        current_user.full_name = request.form['full_name']
+        current_user.city = request.form['city']
+        current_user.job = request.form['job']
+        current_user.skills = request.form['skills']
+
+        db.session.commit()
+        flash('Profil güncellendi', 'success')
+        return redirect(url_for('aboutme'))
+
+    return render_template(
+        'aboutme.html',
+        user=current_user,
+        edit_mode=edit_mode
+    )
 
 # ==========================================
 # KAYIT OL

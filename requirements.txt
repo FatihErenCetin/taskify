@@ -1,3 +1,49 @@
-flask
-flask_sqlalchemy
-flask-login
+# ============================================================
+# Smart Task Manager - Dependencies
+# ============================================================
+
+# === Core Framework ===
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# === Database ===
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.23
+
+# === Authentication ===
+Flask-Login==0.6.3
+
+# === Internationalization ===
+Flask-Babel==4.0.0
+Babel==2.14.0
+
+# === Utilities ===
+python-dateutil==2.8.2
+
+
+# ============================================================
+# OPTIONAL: AI/NLP Features
+# ============================================================
+# Uncomment these if you want AI-powered features.
+# Note: These require significant disk space and RAM.
+#
+# transformers>=4.36.0      # ~500MB - AI models
+# torch>=2.0.0              # ~2GB - PyTorch backend
+# deep-translator>=1.11.4   # ~1MB - Translation service
+# dateparser>=1.2.0         # ~50MB - Advanced date parsing
+
+# === Minimal AI Setup (lighter) ===
+# If you want AI features with less resources:
+transformers>=4.36.0
+torch>=2.0.0 --index-url https://download.pytorch.org/whl/cpu
+deep-translator>=1.11.4
+dateparser>=1.2.0
+
+
+# ============================================================
+# Development Dependencies
+# ============================================================
+pytest>=7.0.0
+pytest-flask>=1.2.0
+flake8>=6.0.0
+black>=23.0.0

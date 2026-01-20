@@ -1,6 +1,14 @@
+"""
+Database Models for Smart Task Manager
+======================================
+This module contains SQLAlchemy models for User and Task entities.
+Supports role-based access (admin/user) and task assignment between users.
+"""
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash  # For password hashing
 
 # Initialize the database instance
 db = SQLAlchemy()
@@ -8,80 +16,157 @@ db = SQLAlchemy()
 class User(UserMixin, db.Model):
     """
     User Model
-    Represents a user in the system. Can be an 'admin' or a standard 'user'.
+    ----------
+    Represents a user in the system.
+
+    Roles:
+        - 'admin': Can assign tasks to other users
+        - 'user': Can only manage their own tasks
+
+    Relationships:
+        - tasks: Tasks assigned TO this user (user is the performer)
+        - created_tasks: Tasks created BY this user (user is the assigner)
     """
+
     __tablename__ = 'users'
 
-    # Identity & Authentication
-    user_id = db.Column(db.Integer, primary_key=True)
+    # === Identity & Authentication ===
+    id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)  # Stores the hashed password
-    
-    # Role Management ('admin' or 'user')
-    user_role = db.Column(db.String(20), default='user') 
-    
-    # Metadata
-    registration_date = db.Column(db.DateTime, default=datetime.utcnow)
+    password_hash = db.Column(db.String(256), nullable=False)  # Stores the hashed password
+    # === Role Management ===
+    role = db.Column(db.String(20), default='user')  # ('admin' or 'user')
+    # === Metadata ===
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # --- Relationships ---
 
-    # 1. Tasks assigned TO this user (The user is the performer)
+    # === Preferences ===
+    preferred_language = db.Column(db.String(5), default='tr')
+    ai_features_enabled = db.Column(db.Boolean, default=True)
+
+
+    # === Relationships ===
+
+    # Tasks assigned TO this user (user will perform these tasks)
     # Access via: user.tasks
-    tasks = db.relationship(
-        'Task', 
-        foreign_keys='Task.user_id', 
-        backref='performer', 
-        lazy=True
-    )
-    
-    # 2. Tasks created BY this user (The user is the assigner/creator)
-    # Access via: user.created_tasks
-    created_tasks = db.relationship(
-        'Task', 
-        foreign_keys='Task.assigned_by_id', 
-        backref='creator', 
-        lazy=True
-    )
+    tasks = db.relationship('Task', 
+                            foreign_keys='Task.user_id', 
+                            backref='performer', 
+                            lazy=True
+                           )
 
-    def get_id(self):
+    # Tasks created BY this user (user assigned these to others or self)
+    # Access via: user.created_tasks
+    created_tasks = db.relationship('Task', 
+                                      foreign_keys='Task.assigned_by_id', 
+                                      backref='creator', 
+                                      lazy=True
+                                     )
+
+    # === Methods ===
+    def set_password(self, password):
         """
-        Override default get_id() for Flask-Login.
-        Flask-Login expects 'id', but our primary key is 'user_id'.
+        Hash the password and store it in password_hash.
+        Uses werkzeug's secure hashing (pbkdf2:sha256 by default).
         """
-        return str(self.user_id)
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        """
+        Verify a password against the stored hash.
+        Returns True if password matches, False otherwise.
+        """
+        return check_password_hash(self.password_hash, password)
+    
+    def is_admin(self):
+        """
+        Check if user has admin privileges.
+        Returns True if role is 'admin', else False.
+        """
+        return self.role == 'admin'
+
+    def __repr__(self): 
+        """
+        String representation of the User.
+        Returns the username.
+        """
+        return f'<User {self.username}>'
 
 
 class Task(db.Model):
     """
     Task Model
-    Represents a specific task assigned to a user.
-    Includes AI-generated fields for categorization and prioritization.
+    ----------
+    Represents a task in the system.
+
+    Features:
+        - NLP-generated category and priority
+        - Assignment tracking (who assigned, who performs)
+        - Completion status and timestamps
+
+    Priority Scale:
+        1 = High (Urgent)
+        2 = Normal
+        3 = Low
+
+    Categories:
+        Work, Personal, Health, Education, Finance, General
     """
     __tablename__ = 'tasks'
 
-    # Core Task Info
-    task_id = db.Column(db.Integer, primary_key=True)
-    task_title = db.Column(db.String(150), nullable=False)
-    task_explanation = db.Column(db.Text, nullable=True)  # Detailed description for AI analysis
-    
-    # Timing & Status
-    task_deadline = db.Column(db.DateTime, nullable=True)
-    task_date_created = db.Column(db.DateTime, default=datetime.utcnow)
-    task_is_completed = db.Column(db.Boolean, default=False)
-    task_date_completed = db.Column(db.DateTime, nullable=True)
+    # === Core Task Info ===
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text, nullable=True)  # Detailed description for AI analysis
+    # === Timing & Status ===
+    deadline = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    is_completed = db.Column(db.Boolean, default=False)     # Completion status
+    # === NLP-Generated Fields ===
+    category = db.Column(db.String(50), default='General')  # e.g., Work, Health, Finance
+    priority = db.Column(db.Integer, default=2)            # 1=High, 2=Normal, 3=Low
+    # === AI Metadata (for tracking) ===
+    category_source = db.Column(db.String(20), default='manual')  # 'manual', 'keyword', 'ai'
+    priority_source = db.Column(db.String(20), default='manual')
+    deadline_source = db.Column(db.String(20), default='manual')  # 'manual', 'parsed'
 
-    # AI-Generated Fields
-    task_category = db.Column(db.String(50), default='General')  # e.g., Work, Health, Finance
-    task_priority = db.Column(db.Integer, default=50)            # Score from 0 (Low) to 100 (Urgent)
-
-    # --- Foreign Keys ---
+    # === Foreign Keys ===
 
     # The user responsible for completing the task
-    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
     # The user who created/assigned the task (Could be Admin or the User themselves)
-    assigned_by_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    assigned_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    # === Methods ===
+
+    def mark_complete(self):
+        """Mark task as completed with timestamp."""
+        self.is_completed = True
+        self.completed_at = datetime.utcnow()
+
+    def mark_incomplete(self):
+        """Mark task as incomplete, clear completion timestamp."""
+        self.is_completed = False
+        self.completed_at = None
+
+    @property
+    def is_overdue(self):
+        """Check if task is past deadline."""
+        if self.deadline and not self.is_completed:
+            return datetime.utcnow() > self.deadline
+        return False
+
+    @property
+    def days_until_deadline(self):
+        """Get days remaining until deadline."""
+        if self.deadline:
+            delta = self.deadline - datetime.utcnow()
+            return delta.days
+        return None
 
     def __repr__(self):
-        return f'<Task {self.task_title} - Priority: {self.task_priority}>'
+        status = "✓" if self.is_completed else "○"
+        return f'<Task {status} {self.title} (P{self.priority})>'

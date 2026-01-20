@@ -1,208 +1,165 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
+# -*- coding: utf-8 -*-
+"""
+Smart Task Manager - Main Application
+=====================================
+Flask-based task management with NLP categorization and multi-language support.
+"""
+
+from flask import (
+    Flask, render_template, request, redirect, 
+    url_for, flash, session, jsonify
+)
+from flask_login import (
+    LoginManager, login_user, logout_user, 
+    login_required, current_user
+)
+from flask_babel import Babel, _
 from datetime import datetime
 
-
-# ==========================================
-# NLP KATEGORİLENDİRME SİSTEMİ
-# ==========================================
-
-# Kategori anahtar kelimeleri
-KATEGORILER = {
-    'İş': ['toplantı', 'meeting', 'rapor', 'sunum', 'müşteri', 'proje', 'mail', 'email', 'ofis', 'deadline'],
-    'Kişisel': ['alışveriş', 'market', 'ev', 'aile', 'arkadaş', 'hediye', 'tatil', 'gezi', 'yemek'],
-    'Sağlık': ['doktor', 'hastane', 'ilaç', 'egzersiz', 'spor', 'koşu', 'diyet', 'randevu', 'sağlık', 'ameliyat'],
-    'Eğitim': ['ders', 'sınav', 'ödev', 'okul', 'kurs', 'kitap', 'öğren', 'çalış', 'eğitim'],
-    'Finans': ['fatura', 'ödeme', 'banka', 'kredi', 'vergi', 'maaş', 'para', 'hesap'],
-}
-
-KATEGORI_PUANLAR = {'İş': 3,
-                    'Kişisel': 1,
-                    'Sağlık': 5,
-                    'Eğitim': 2,
-                    'Finans': 4,
-                    'Genel': 1}
-
-# Öncelik anahtar kelimeleri
-ONCELIK_KELIMELERI = {
-    'yuksek': ['acil', 'hemen', 'bugün', 'kritik', 'önemli', 'urgent', 'yarın', 'doktor', 'sağlık', 'randevu', 'mutlaka'],
-    'dusuk': ['belki', 'bir ara', 'sonra', 'ileride', 'zaman olursa'],
-}
+from config import get_config
+from models import db, User, Task
+from services.nlp_service import NLPService
+from services.stats_service import StatsService
 
 
-def kategori_belirle(metin):
-    """Metinden kategori belirle"""
-    metin = metin.lower()
+# ============================================================
+# APPLICATION FACTORY
+# ============================================================
+
+def create_app(config_class=None):
+    """Application factory pattern."""
+    app = Flask(__name__)
     
-    for kategori, kelimeler in KATEGORILER.items():
-        for kelime in kelimeler:
-            if kelime in metin:
-                return kategori
+    # Load configuration
+    if config_class is None:
+        config_class = get_config()
+    app.config.from_object(config_class)
     
-    return 'Genel'  # Eşleşme yoksa
-
-
-def oncelik_belirle(metin):
-    """Metinden öncelik belirle (1=Yüksek, 2=Normal, 3=Düşük)"""
-    metin = metin.lower()
+    # Initialize extensions
+    db.init_app(app)
+    babel.init_app(app)
+    login_manager.init_app(app)
     
-    for kelime in ONCELIK_KELIMELERI['yuksek']:
-        if kelime in metin:
-            return 1  # Yüksek
+    # Register blueprints (if any)
+    # app.register_blueprint(...)
     
-    for kelime in ONCELIK_KELIMELERI['dusuk']:
-        if kelime in metin:
-            return 3  # Düşük
-    
-    return 2  # Normal
+    return app
 
 
-def oncelik_skoru(task):
-        # Öncelik ağırlığı (1=en acil → en düşük skor)
-        #print(f"Task Öncelik: {task.oncelik}, Kategori: {task.kategori}")
+# ============================================================
+# EXTENSION INSTANCES
+# ============================================================
 
-        if task.son_tarih != None:
-            bugun = datetime.utcnow()
-            if task.son_tarih:
-                kalan_gun = (task.son_tarih - bugun).days + 1  # 0 gün kalmasın
-
-            oncelik_agirlik = task.oncelik * kalan_gun - KATEGORI_PUANLAR[task.kategori]
-        else:
-            oncelik_agirlik = task.oncelik * 10 - KATEGORI_PUANLAR[task.kategori]
-        
-        # Tarih ağırlığı (eski tarih = düşük skor = daha önce göster)
-        tarih_agirlik = task.olusturma_tarihi.timestamp() if task.olusturma_tarihi else 0
-        
-        return oncelik_agirlik + (tarih_agirlik / 1000000)
-
-
-# ============================================
-# 🏠 ÇOK SAYFALI FLASK UYGULAMASI
-# ============================================
-# Her @app.route = Bir sayfa adresi
-
-app = Flask(__name__)
-
-
-# ==========================================
-# VERİTABANI AYARLARI
-# ==========================================
-# SQLite veritabanı dosyası (proje klasöründe oluşacak)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///taskify.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'gizli-anahtar-degistir-bunu-123!'  # Session için gerekli
-
-
-# Veritabanı nesnesini oluştur
-db = SQLAlchemy(app)
-
-
-# Flask-Login ayarları
+babel = Babel()
 login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'  # Giriş yapılmamışsa yönlendir
-login_manager.login_message = 'Bu sayfayı görmek için giriş yapmalısınız.'
+login_manager.login_view = 'login'
 login_manager.login_message_category = 'warning'
 
 
-# ==========================================
-# MODEL (TABLO) TANIMLAMASI
-# ==========================================
+# ============================================================
+# CREATE APP INSTANCE
+# ============================================================
 
-# ==========================================
-# KULLANICI TABLOSU
-# ==========================================
-class User(UserMixin, db.Model):
-    __tablename__ = 'users'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # İlişki: Kullanıcının görevleri
-    tasks = db.relationship('Task', backref='owner', lazy=True)
-    
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-    
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-    
-    def __repr__(self):
-        return f'<User {self.username}>'
+app = Flask(__name__)
+app.config.from_object(get_config())
+
+# Initialize extensions
+db.init_app(app)
+babel.init_app(app)
+login_manager.init_app(app)
 
 
-# Flask-Login için kullanıcı yükleyici
+# ============================================================
+# BABEL CONFIGURATION
+# ============================================================
+
+@babel.localeselector
+def get_locale():
+    """Select best matching language."""
+    if 'language' in session:
+        return session['language']
+    
+    if current_user.is_authenticated and current_user.preferred_language:
+        return current_user.preferred_language
+    
+    return request.accept_languages.best_match(
+        app.config['BABEL_SUPPORTED_LOCALES']
+    )
+
+
+@app.route('/set-language/<language>')
+def set_language(language):
+    """Set user's preferred language."""
+    if language in app.config['BABEL_SUPPORTED_LOCALES']:
+        session['language'] = language
+        
+        if current_user.is_authenticated:
+            current_user.preferred_language = language
+            db.session.commit()
+    
+    return redirect(request.referrer or url_for('home'))
+
+
+# ============================================================
+# LOGIN MANAGER
+# ============================================================
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-# ==========================================
-# GÖREV TABLOSU
-# ==========================================
-# Bu sınıf = Veritabanındaki "Tasks" tablosu
-class Task(db.Model):
-    """
-    Görev tablosu.
-    Her satır = Bir görev.
-    """
-    __tablename__ = 'tasks'  # Tablo adı
-    
-    # Sütunlar (kolonlar)
-    id = db.Column(db.Integer, primary_key=True)  # Otomatik artan ID
-    baslik = db.Column(db.String(200), nullable=False)  # Görev başlığı (zorunlu)
-    aciklama = db.Column(db.Text)  # Açıklama (opsiyonel)
-    tamamlandi = db.Column(db.Boolean, default=False)  # Tamamlandı mı?
-    kategori = db.Column(db.String(50), default='Genel')      # Kategori
-    oncelik = db.Column(db.Integer, default=2)                 # (1=Yüksek, 2=Normal, 3=Düşük)
-    olusturma_tarihi = db.Column(db.DateTime, default=datetime.utcnow)  # Oluşturulma tarihi
-    tamamlanma_tarihi = db.Column(db.DateTime, nullable=True)
-    son_tarih = db.Column(db.DateTime, nullable=True)  # Due Date
-    # Kullanıcı ilişkisi
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    
-
-    def __repr__(self):
-        return f'<Task {self.id}: {self.baslik}>'
+@login_manager.unauthorized_handler
+def unauthorized():
+    flash(_('login_required'), 'warning')
+    return redirect(url_for('login', next=request.url))
 
 
-
-
-# ==========================================
-# SAYFALAR (ROUTES)
-# ==========================================
-
-# ==========================================
-# ANA SAYFA
-# ==========================================
-# Adres: http://127.0.0.1:5000/
-# "/" işareti = web sitesinin ana sayfası
-@app.route('/')
-def ana_sayfa():
-    return render_template('mainpage.html')
+# ============================================================
+# CONTEXT PROCESSORS
+# ============================================================
 
 @app.context_processor
-def inject_now():
-    return {'now': datetime.utcnow()}
+def inject_globals():
+    """Inject global variables into templates."""
+    return {
+        'now': datetime.utcnow(),
+        'current_language': get_locale(),
+        'ai_enabled': app.config.get('AI_ENABLED', False),
+        'NLPService': NLPService,
+        'StatsService': StatsService
+    }
 
-# ==========================================
-# HAKKIMDA
-# ==========================================
-# Adres: http://127.0.0.1:5000/aboutme
-@app.route('/aboutme')
-def aboutme():
-    return render_template('aboutme.html')
 
-# ==========================================
-# KAYIT OL
-# ==========================================
+# ============================================================
+# ROUTES - PUBLIC
+# ============================================================
+
+@app.route('/')
+def home():
+    """Home page."""
+    return render_template('home.html')
+
+
+@app.route('/about')
+def about():
+    """About page."""
+    return render_template('about.html')
+
+
+@app.route('/contact')
+def contact():
+    """Contact page."""
+    return render_template('contact.html')
+
+
+# ============================================================
+# ROUTES - AUTHENTICATION
+# ============================================================
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """User registration."""
     if current_user.is_authenticated:
         return redirect(url_for('tasks'))
     
@@ -210,39 +167,41 @@ def register():
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
-        password2 = request.form['password2']
+        password_confirm = request.form['password_confirm']
         
-        # Validasyon
-        if password != password2:
-            flash('Şifreler eşleşmiyor!', 'danger')
+        # Validation
+        if password != password_confirm:
+            flash(_('password_mismatch'), 'danger')
             return redirect(url_for('register'))
         
         if User.query.filter_by(username=username).first():
-            flash('Bu kullanıcı adı zaten alınmış!', 'danger')
+            flash(_('username_taken'), 'danger')
             return redirect(url_for('register'))
         
         if User.query.filter_by(email=email).first():
-            flash('Bu email zaten kayıtlı!', 'danger')
+            flash(_('email_taken'), 'danger')
             return redirect(url_for('register'))
         
-        # Yeni kullanıcı oluştur
-        user = User(username=username, email=email)
+        # Create user
+        user = User(
+            username=username,
+            email=email,
+            preferred_language=get_locale()
+        )
         user.set_password(password)
         
         db.session.add(user)
         db.session.commit()
         
-        flash('Kayıt başarılı! Şimdi giriş yapabilirsiniz.', 'success')
+        flash(_('register_success'), 'success')
         return redirect(url_for('login'))
     
     return render_template('register.html')
 
 
-# ==========================================
-# GİRİŞ YAP
-# ==========================================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """User login."""
     if current_user.is_authenticated:
         return redirect(url_for('tasks'))
     
@@ -254,180 +213,392 @@ def login():
         
         if user and user.check_password(password):
             login_user(user)
-            flash(f'Hoş geldin, {user.username}!', 'success')
+            flash(_('login_success', username=user.username), 'success')
             
-            # Giriş öncesi gitmek istediği sayfaya yönlendir
             next_page = request.args.get('next')
             return redirect(next_page if next_page else url_for('tasks'))
         else:
-            flash('Kullanıcı adı veya şifre hatalı!', 'danger')
+            flash(_('login_error'), 'danger')
     
     return render_template('login.html')
-    
 
-# ==========================================
-# ÇIKIŞ YAP
-# ==========================================
+
 @app.route('/logout')
 @login_required
 def logout():
+    """User logout."""
     logout_user()
-    flash('Başarıyla çıkış yaptınız.', 'info')
-    return redirect(url_for('mainpage'))
+    flash(_('logout_success'), 'info')
+    return redirect(url_for('home'))
 
 
-# ==========================================
-# GÖREVLER
-# ==========================================
-# Adres: http://127.0.0.1:5000/tasks
+# ============================================================
+# ROUTES - TASKS
+# ============================================================
+
 @app.route('/tasks')
 @login_required
 def tasks():
-    # Sadece giriş yapan kullanıcının görevleri
-    aktif_gorevler = Task.query.filter_by(user_id=current_user.id, tamamlandi=False).all()
-
-    aktif_gorevler_sirali = sorted(aktif_gorevler, key=oncelik_skoru)
+    """Task list page."""
+    # Active tasks
+    active_tasks = Task.query.filter_by(
+        user_id=current_user.id,
+        is_completed=False
+    ).all()
     
-    # Tamamlanmış görevler: tamamlanma tarihine göre (en yeni önce)
-    tamamlanan_gorevler = Task.query.filter_by(user_id=current_user.id, tamamlandi=True).order_by(Task.tamamlanma_tarihi.desc()).all()
+    # Sort by priority and deadline
+    active_tasks_sorted = sorted(
+        active_tasks,
+        key=lambda t: (t.priority, t.deadline or datetime.max)
+    )
+    
+    # Completed tasks
+    completed_tasks = Task.query.filter_by(
+        user_id=current_user.id,
+        is_completed=True
+    ).order_by(Task.completed_at.desc()).limit(10).all()
+    
+    # Get deadline alerts
+    for task in active_tasks_sorted:
+        task.alert = NLPService.get_task_alert(task.deadline)
+    
+    return render_template(
+        'tasks.html',
+        active_tasks=active_tasks_sorted,
+        completed_tasks=completed_tasks
+    )
 
-    return render_template('tasklist.html', 
-                           aktif_gorevler=aktif_gorevler_sirali,
-                           tamamlanan_gorevler=tamamlanan_gorevler)
-   
 
-# ==========================================
-# GÖREV EKLEME
-# ==========================================
-@app.route('/add', methods=['GET', 'POST'])
+@app.route('/tasks/add', methods=['GET', 'POST'])
 @login_required
 def add_task():
+    """Add new task."""
     if request.method == 'POST':
-        # Formdan verileri al
-        baslik = request.form['baslik']
-        aciklama = request.form['aciklama']
-        secilen_oncelik = int(request.form['oncelik'])
-        secilen_kategori = request.form['kategori']
-        son_tarih_str = request.form.get('son_tarih')
-        #print(f"Seçilen kategori: {secilen_kategori}, Seçilen öncelik: {secilen_oncelik}")
+        title = request.form['title']
+        description = request.form.get('description', '')
+        selected_priority = request.form.get('priority', '0')
+        selected_category = request.form.get('category', 'auto')
+        deadline_str = request.form.get('deadline', '')
+        use_nlp = request.form.get('use_nlp') == 'on'
         
-        # NLP ile kategori ve öncelik belirle
-        # Kategori
-        tam_metin = baslik + ' ' + aciklama
-        #kategori = kategori_belirle(tam_metin)
-        if secilen_kategori == 'NLP':
-            kategori = kategori_belirle(tam_metin)
-        else:
-            kategori = secilen_kategori
-        # Öncelik
-        if secilen_oncelik == 0:
-            oncelik = oncelik_belirle(tam_metin)
-        else:
-            oncelik = int(secilen_oncelik)
+        # Initialize with defaults
+        category = app.config['DEFAULT_CATEGORY']
+        priority = app.config['DEFAULT_PRIORITY']
+        deadline = None
+        category_source = 'manual'
+        priority_source = 'manual'
+        deadline_source = 'manual'
         
-        #print(f"Seçilen kategori: {kategori}, Seçilen öncelik: {oncelik}")
-
-        son_tarih = None
-        if son_tarih_str and son_tarih_str.strip():
+        # Parse manual deadline
+        if deadline_str:
             try:
-                son_tarih = datetime.strptime(son_tarih_str, '%Y-%m-%d')
+                deadline = datetime.strptime(deadline_str, '%Y-%m-%d')
+                deadline_source = 'manual'
             except ValueError:
-                son_tarih = None
-
-        # Yeni görev oluştur
-        yeni_gorev = Task(
-            baslik=baslik,
-            aciklama=aciklama,
-            kategori=kategori,
-            oncelik=oncelik,
-            son_tarih=son_tarih,
-            user_id=current_user.id  # Kullanıcıya bağla
-        )
-
-        # Veritabanına ekle
-        db.session.add(yeni_gorev)
-        db.session.commit()
-
-        flash('Görev başarıyla eklendi!', 'success')
+                pass
         
-        # Görev listesine yönlendir
+        # Use NLP analysis if enabled
+        if use_nlp or selected_category == 'auto' or selected_priority == '0':
+            analysis = NLPService.analyze_task(
+                title, 
+                description,
+                use_ai=current_user.ai_features_enabled
+            )
+            
+            # Auto category
+            if selected_category == 'auto':
+                category = analysis['category']
+                category_source = analysis['category_source']
+            else:
+                category = selected_category
+            
+            # Auto priority
+            if selected_priority == '0':
+                priority = analysis['priority']
+                priority_source = analysis['priority_source']
+            else:
+                priority = int(selected_priority)
+            
+            # Extract deadline from text if not manually set
+            if not deadline and analysis.get('deadline'):
+                deadline = analysis['deadline']
+                deadline_source = analysis.get('deadline_source', 'parsed')
+        else:
+            # Manual selection
+            category = selected_category
+            priority = int(selected_priority) if selected_priority else 2
+        
+        # Create task
+        new_task = Task(
+            title=title,
+            description=description,
+            category=category,
+            priority=priority,
+            deadline=deadline,
+            category_source=category_source,
+            priority_source=priority_source,
+            deadline_source=deadline_source,
+            user_id=current_user.id,
+            assigned_by_id=current_user.id
+        )
+        
+        db.session.add(new_task)
+        db.session.commit()
+        
+        flash(_('task_added'), 'success')
         return redirect(url_for('tasks'))
     
-    # GET ise formu göster
-    return render_template('add_task.html')
+    # GET - show form with categories and priorities
+    return render_template(
+        'add_task.html',
+        categories=NLPService.get_all_categories(),
+        priorities=NLPService.get_all_priorities()
+    )
 
 
-# ==========================================
-# GÖREV SİLME
-# ==========================================
-@app.route('/delete/<int:id>')
+@app.route('/tasks/<int:task_id>/edit', methods=['GET', 'POST'])
 @login_required
-def delete_task(id):
-    # Görevi bul
-    gorev = Task.query.get_or_404(id)
+def edit_task(task_id):
+    """Edit existing task."""
+    task = Task.query.get_or_404(task_id)
     
-    # Yetki kontrolü
-    if gorev.user_id != current_user.id:
-        flash('Bu göreve erişim yetkiniz yok!', 'danger')
+    if task.user_id != current_user.id:
+        flash(_('access_denied'), 'danger')
         return redirect(url_for('tasks'))
+    
+    if request.method == 'POST':
+        task.title = request.form['title']
+        task.description = request.form.get('description', '')
+        task.priority = int(request.form.get('priority', 2))
+        task.category = request.form.get('category', 'General')
+        
+        # Update source to manual since user edited
+        task.category_source = 'manual'
+        task.priority_source = 'manual'
+        
+        deadline_str = request.form.get('deadline', '')
+        if deadline_str:
+            try:
+                task.deadline = datetime.strptime(deadline_str, '%Y-%m-%d')
+                task.deadline_source = 'manual'
+            except ValueError:
+                pass
+        else:
+            task.deadline = None
+        
+        db.session.commit()
+        flash(_('task_updated'), 'success')
+        return redirect(url_for('tasks'))
+    
+    return render_template(
+        'edit_task.html',
+        task=task,
+        categories=NLPService.get_all_categories(),
+        priorities=NLPService.get_all_priorities()
+    )
 
-    # Sil
-    db.session.delete(gorev)
+
+@app.route('/tasks/<int:task_id>/delete')
+@login_required
+def delete_task(task_id):
+    """Delete a task."""
+    task = Task.query.get_or_404(task_id)
+    
+    if task.user_id != current_user.id:
+        flash(_('access_denied'), 'danger')
+        return redirect(url_for('tasks'))
+    
+    db.session.delete(task)
     db.session.commit()
     
-    flash('Görev silindi.', 'info')
-
-    # Listeye dön
+    flash(_('task_deleted'), 'info')
     return redirect(url_for('tasks'))
 
 
-# ==========================================
-# GÖREV TAMAMLANDI İŞARETLE
-# ==========================================
-@app.route('/complete/<int:id>')
+@app.route('/tasks/<int:task_id>/toggle')
 @login_required
-def complete_task(id):
-    # Görevi bul
-    gorev = Task.query.get_or_404(id)
+def toggle_task(task_id):
+    """Toggle task completion status."""
+    task = Task.query.get_or_404(task_id)
     
-    # Yetki kontrolü
-    if gorev.user_id != current_user.id:
-        flash('Bu göreve erişim yetkiniz yok!', 'danger')
+    if task.user_id != current_user.id:
+        flash(_('access_denied'), 'danger')
         return redirect(url_for('tasks'))
-
-    # Durumu tersine çevir
-    gorev.tamamlandi = not gorev.tamamlandi
-
-    # Tamamlanma tarihini kaydet/sıfırla
-    if gorev.tamamlandi:
-        gorev.tamamlanma_tarihi = datetime.utcnow()
+    
+    if task.is_completed:
+        task.mark_incomplete()
     else:
-        gorev.tamamlanma_tarihi = None
+        task.mark_complete()
     
-    # Kaydet
     db.session.commit()
-    
-    # Listeye dön
     return redirect(url_for('tasks'))
 
 
-# ==========================================
-# İLETİŞİM
-# ==========================================
-# Adres: http://127.0.0.1:5000/iletisim
-@app.route('/iletisim')
-def iletisim():
-    pass
+# ============================================================
+# ROUTES - STATISTICS
+# ============================================================
+
+@app.route('/stats')
+@login_required
+def stats():
+    """User statistics page."""
+    user_stats = StatsService.get_user_stats(current_user.id)
+    badge = StatsService.get_performance_badge(current_user.id, get_locale())
+    category_breakdown = StatsService.get_category_breakdown(current_user.id)
+    weekly_progress = StatsService.get_weekly_progress(current_user.id)
+    upcoming = StatsService.get_upcoming_deadlines(current_user.id)
+    
+    # Get AI comment
+    ai_comment = StatsService.get_ai_comment(
+        current_user.id, 
+        get_locale(),
+        use_ai=current_user.ai_features_enabled
+    )
+    
+    return render_template(
+        'stats.html',
+        stats=user_stats,
+        badge=badge,
+        category_breakdown=category_breakdown,
+        weekly_progress=weekly_progress,
+        upcoming_tasks=upcoming,
+        ai_comment=ai_comment,
+        ai_available=StatsService.is_ai_available()
+    )
 
 
-# ==========================================
-# UYGULAMAYI BAŞLAT
-# ==========================================
+# ============================================================
+# ROUTES - API (for AJAX requests)
+# ============================================================
+
+@app.route('/api/analyze', methods=['POST'])
+@login_required
+def api_analyze():
+    """API endpoint for real-time task analysis."""
+    data = request.get_json()
+    
+    if not data or 'text' not in data:
+        return jsonify({'error': 'No text provided'}), 400
+    
+    analysis = NLPService.analyze_task(
+        data['text'],
+        data.get('description', ''),
+        use_ai=current_user.ai_features_enabled
+    )
+    
+    # Add localized labels
+    lang = get_locale()
+    analysis['category_display'] = NLPService.get_category_display(
+        analysis['category'], lang
+    )
+    analysis['priority_display'] = NLPService.get_priority_display(
+        analysis['priority'], lang
+    )
+    
+    # Format deadline
+    if analysis.get('deadline'):
+        analysis['deadline_formatted'] = analysis['deadline'].strftime('%Y-%m-%d')
+    
+    return jsonify(analysis)
+
+
+@app.route('/api/stats')
+@login_required
+def api_stats():
+    """API endpoint for user statistics."""
+    stats = StatsService.get_user_stats(current_user.id)
+    return jsonify(stats)
+
+
+@app.route('/api/nlp-status')
+@login_required
+def api_nlp_status():
+    """API endpoint for NLP service status."""
+    return jsonify(NLPService.get_status())
+
+
+# ============================================================
+# ROUTES - SETTINGS
+# ============================================================
+
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    """User settings page."""
+    if request.method == 'POST':
+        # Update language preference
+        language = request.form.get('language')
+        if language in app.config['BABEL_SUPPORTED_LOCALES']:
+            current_user.preferred_language = language
+            session['language'] = language
+        
+        # Update AI preference
+        current_user.ai_features_enabled = request.form.get('ai_enabled') == 'on'
+        
+        db.session.commit()
+        flash(_('settings_saved'), 'success')
+        return redirect(url_for('settings'))
+    
+    return render_template('settings.html')
+
+
+# ============================================================
+# ERROR HANDLERS
+# ============================================================
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('errors/404.html'), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return render_template('errors/500.html'), 500
+
+
+# ============================================================
+# CLI COMMANDS
+# ============================================================
+
+@app.cli.command('init-db')
+def init_db():
+    """Initialize the database."""
+    db.create_all()
+    print('✅ Database initialized.')
+
+
+@app.cli.command('create-admin')
+def create_admin():
+    """Create admin user."""
+    import getpass
+    
+    username = input('Admin username: ')
+    email = input('Admin email: ')
+    password = getpass.getpass('Admin password: ')
+    
+    admin = User(
+        username=username,
+        email=email,
+        role='admin'
+    )
+    admin.set_password(password)
+    
+    db.session.add(admin)
+    db.session.commit()
+    
+    print(f'✅ Admin user "{username}" created.')
+
+
+# ============================================================
+# RUN APPLICATION
+# ============================================================
+
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all() 
-        print('✅ Database and tables created.')
-
+        db.create_all()
+        print('✅ Database and tables created successfully.')
+        print(f'🤖 AI Features: {"Enabled" if app.config["AI_ENABLED"] else "Disabled"}')
+        print(f'🌍 Default Language: {app.config["BABEL_DEFAULT_LOCALE"]}')
     
     app.run(debug=True, port=5000)
-

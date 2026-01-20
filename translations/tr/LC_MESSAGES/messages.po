@@ -1,0 +1,394 @@
+# Turkish translations for Smart Task Manager
+# Copyright (C) 2025
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Smart Task Manager 1.0\n"
+"Language: tr\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+# ==========================================
+# AUTHENTICATION
+# ==========================================
+
+msgid "login_required"
+msgstr "Bu sayfayı görmek için giriş yapmalısınız."
+
+msgid "login_success"
+msgstr "Hoş geldin, %(username)s!"
+
+msgid "login_error"
+msgstr "Kullanıcı adı veya şifre hatalı!"
+
+msgid "logout_success"
+msgstr "Başarıyla çıkış yaptınız."
+
+msgid "register_success"
+msgstr "Kayıt başarılı! Şimdi giriş yapabilirsiniz."
+
+msgid "password_mismatch"
+msgstr "Şifreler eşleşmiyor!"
+
+msgid "username_taken"
+msgstr "Bu kullanıcı adı zaten alınmış!"
+
+msgid "email_taken"
+msgstr "Bu email zaten kayıtlı!"
+
+# ==========================================
+# TASKS
+# ==========================================
+
+msgid "task_added"
+msgstr "Görev başarıyla eklendi!"
+
+msgid "task_updated"
+msgstr "Görev başarıyla güncellendi!"
+
+msgid "task_deleted"
+msgstr "Görev silindi."
+
+msgid "task_completed"
+msgstr "Görev tamamlandı!"
+
+msgid "task_uncompleted"
+msgstr "Görev aktif duruma alındı."
+
+msgid "access_denied"
+msgstr "Bu göreve erişim yetkiniz yok!"
+
+# ==========================================
+# NAVIGATION
+# ==========================================
+
+msgid "nav_home"
+msgstr "Ana Sayfa"
+
+msgid "nav_tasks"
+msgstr "Görevlerim"
+
+msgid "nav_add_task"
+msgstr "Yeni Görev"
+
+msgid "nav_stats"
+msgstr "İstatistikler"
+
+msgid "nav_settings"
+msgstr "Ayarlar"
+
+msgid "nav_about"
+msgstr "Hakkımızda"
+
+msgid "nav_contact"
+msgstr "İletişim"
+
+msgid "nav_login"
+msgstr "Giriş Yap"
+
+msgid "nav_register"
+msgstr "Kayıt Ol"
+
+msgid "nav_logout"
+msgstr "Çıkış Yap"
+
+msgid "nav_profile"
+msgstr "Profil"
+
+# ==========================================
+# FORMS
+# ==========================================
+
+msgid "form_username"
+msgstr "Kullanıcı Adı"
+
+msgid "form_email"
+msgstr "E-posta"
+
+msgid "form_password"
+msgstr "Şifre"
+
+msgid "form_password_confirm"
+msgstr "Şifre Tekrar"
+
+msgid "form_title"
+msgstr "Başlık"
+
+msgid "form_description"
+msgstr "Açıklama"
+
+msgid "form_category"
+msgstr "Kategori"
+
+msgid "form_priority"
+msgstr "Öncelik"
+
+msgid "form_deadline"
+msgstr "Son Tarih"
+
+msgid "form_submit"
+msgstr "Gönder"
+
+msgid "form_save"
+msgstr "Kaydet"
+
+msgid "form_cancel"
+msgstr "İptal"
+
+msgid "form_use_nlp"
+msgstr "Otomatik Analiz (NLP)"
+
+msgid "form_auto"
+msgstr "Otomatik"
+
+# ==========================================
+# CATEGORIES
+# ==========================================
+
+msgid "category_work"
+msgstr "İş"
+
+msgid "category_personal"
+msgstr "Kişisel"
+
+msgid "category_health"
+msgstr "Sağlık"
+
+msgid "category_education"
+msgstr "Eğitim"
+
+msgid "category_finance"
+msgstr "Finans"
+
+msgid "category_general"
+msgstr "Genel"
+
+msgid "category_auto"
+msgstr "Otomatik (NLP)"
+
+# ==========================================
+# PRIORITIES
+# ==========================================
+
+msgid "priority_high"
+msgstr "Yüksek"
+
+msgid "priority_normal"
+msgstr "Normal"
+
+msgid "priority_low"
+msgstr "Düşük"
+
+msgid "priority_auto"
+msgstr "Otomatik (NLP)"
+
+# ==========================================
+# TASK LIST
+# ==========================================
+
+msgid "tasks_active"
+msgstr "Aktif Görevler"
+
+msgid "tasks_completed"
+msgstr "Tamamlanan Görevler"
+
+msgid "tasks_empty"
+msgstr "Henüz görev eklenmemiş."
+
+msgid "tasks_no_completed"
+msgstr "Tamamlanan görev yok."
+
+msgid "task_due"
+msgstr "Son Tarih"
+
+msgid "task_created"
+msgstr "Oluşturulma"
+
+msgid "task_edit"
+msgstr "Düzenle"
+
+msgid "task_delete"
+msgstr "Sil"
+
+msgid "task_complete"
+msgstr "Tamamla"
+
+msgid "task_undo"
+msgstr "Geri Al"
+
+# ==========================================
+# DEADLINE ALERTS
+# ==========================================
+
+msgid "deadline_overdue"
+msgstr "Süre doldu!"
+
+msgid "deadline_today"
+msgstr "Bugün son gün!"
+
+msgid "deadline_tomorrow"
+msgstr "Yarın son gün!"
+
+msgid "deadline_soon"
+msgstr "%(days)s gün kaldı"
+
+msgid "deadline_this_week"
+msgstr "Bu hafta içinde"
+
+# ==========================================
+# STATISTICS
+# ==========================================
+
+msgid "stats_title"
+msgstr "İstatistiklerim"
+
+msgid "stats_completion_rate"
+msgstr "Tamamlama Oranı"
+
+msgid "stats_total_tasks"
+msgstr "Toplam Görev"
+
+msgid "stats_completed_tasks"
+msgstr "Tamamlanan"
+
+msgid "stats_active_tasks"
+msgstr "Aktif"
+
+msgid "stats_overdue_tasks"
+msgstr "Geciken"
+
+msgid "stats_focus_score"
+msgstr "Odaklanma Skoru"
+
+msgid "stats_most_planned"
+msgstr "En Çok Planlanan"
+
+msgid "stats_most_completed"
+msgstr "En Çok Tamamlanan"
+
+msgid "stats_weekly_completed"
+msgstr "Bu Hafta Tamamlanan"
+
+msgid "stats_streak"
+msgstr "Seri"
+
+msgid "stats_streak_days"
+msgstr "gün"
+
+msgid "stats_ai_comment"
+msgstr "Yapay Zeka Yorumu"
+
+msgid "stats_category_breakdown"
+msgstr "Kategori Dağılımı"
+
+msgid "stats_weekly_progress"
+msgstr "Haftalık İlerleme"
+
+msgid "stats_upcoming"
+msgstr "Yaklaşan Son Tarihler"
+
+# ==========================================
+# SETTINGS
+# ==========================================
+
+msgid "settings_title"
+msgstr "Ayarlar"
+
+msgid "settings_language"
+msgstr "Dil"
+
+msgid "settings_ai_features"
+msgstr "Yapay Zeka Özellikleri"
+
+msgid "settings_ai_enabled"
+msgstr "AI özelliklerini etkinleştir"
+
+msgid "settings_saved"
+msgstr "Ayarlar kaydedildi."
+
+# ==========================================
+# PAGES
+# ==========================================
+
+msgid "page_home"
+msgstr "Ana Sayfa"
+
+msgid "page_login"
+msgstr "Giriş Yap"
+
+msgid "page_register"
+msgstr "Kayıt Ol"
+
+msgid "page_tasks"
+msgstr "Görevlerim"
+
+msgid "page_add_task"
+msgstr "Yeni Görev Ekle"
+
+msgid "page_edit_task"
+msgstr "Görevi Düzenle"
+
+msgid "page_stats"
+msgstr "İstatistikler"
+
+msgid "page_settings"
+msgstr "Ayarlar"
+
+msgid "page_about"
+msgstr "Hakkımızda"
+
+msgid "page_contact"
+msgstr "İletişim"
+
+# ==========================================
+# CONFIRMATIONS
+# ==========================================
+
+msgid "confirm_delete"
+msgstr "Bu görevi silmek istediğinize emin misiniz?"
+
+msgid "confirm_logout"
+msgstr "Çıkış yapmak istediğinize emin misiniz?"
+
+# ==========================================
+# ERRORS
+# ==========================================
+
+msgid "error_404"
+msgstr "Sayfa bulunamadı!"
+
+msgid "error_404_message"
+msgstr "Aradığınız sayfa mevcut değil veya taşınmış olabilir."
+
+msgid "error_500"
+msgstr "Sunucu hatası!"
+
+msgid "error_500_message"
+msgstr "Bir şeyler yanlış gitti. Lütfen daha sonra tekrar deneyin."
+
+msgid "error_go_home"
+msgstr "Ana Sayfaya Dön"
+
+# ==========================================
+# MISC
+# ==========================================
+
+msgid "welcome_message"
+msgstr "Akıllı Görev Yöneticisine Hoş Geldiniz!"
+
+msgid "welcome_subtitle"
+msgstr "NLP destekli görev yönetimi ile işlerinizi organize edin."
+
+msgid "language"
+msgstr "Dil"
+
+msgid "turkish"
+msgstr "Türkçe"
+
+msgid "english"
+msgstr "İngilizce"
+
+msgid "ai_powered"
+msgstr "Yapay Zeka Destekli"
+
+msgid "analyzed_by"
+msgstr "Analiz: %(source)s"

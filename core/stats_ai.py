@@ -87,8 +87,25 @@ def generate_ai_comment(stats: Dict[str, Any], language: str = 'tr') -> str:
             f"Task: Write a one-sentence motivational feedback for this user."
         )
         
-        result = generator(prompt, max_length=60, do_sample=False)
+        result = generator(
+            prompt,
+            max_new_tokens=80,
+            do_sample=True,
+            temperature=0.7,
+            repetition_penalty=2.0,
+            no_repeat_ngram_size=3
+        )
         comment = result[0]['generated_text']
+
+        # Tekrar eden cümleleri temizle
+        sentences = comment.split('. ')
+        unique_sentences = []
+        for s in sentences:
+            if s.strip() and s.strip() not in unique_sentences:
+                unique_sentences.append(s.strip())
+        comment = '. '.join(unique_sentences[:2])  # Max 2 cümle al
+        if comment and not comment.endswith('.'):
+            comment += '.'
         
         # Translate to Turkish if needed
         if language == 'tr':

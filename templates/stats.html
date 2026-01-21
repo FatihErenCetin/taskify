@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+
+{% block title %}Istatistikler{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Sol Kolon: Ana Istatistikler -->
+    <div class="col-lg-8">
+        <!-- Ozet Kartlari -->
+        <div class="row mb-4">
+            <div class="col-6 col-md-3 mb-3">
+                <div class="glass-card p-3 text-center fade-in">
+                    <i class="bi bi-list-task text-turuncu" style="font-size: 2rem;"></i>
+                    <h3 class="mb-0 mt-2" data-counter="{{ stats.total_tasks }}">{{ stats.total_tasks }}</h3>
+                    <small class="text-muted">Toplam Gorev</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="glass-card p-3 text-center fade-in" style="animation-delay: 0.1s;">
+                    <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                    <h3 class="mb-0 mt-2" data-counter="{{ stats.completed_tasks }}">{{ stats.completed_tasks }}</h3>
+                    <small class="text-muted">Tamamlanan</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="glass-card p-3 text-center fade-in" style="animation-delay: 0.2s;">
+                    <i class="bi bi-hourglass-split text-warning" style="font-size: 2rem;"></i>
+                    <h3 class="mb-0 mt-2" data-counter="{{ stats.active_tasks }}">{{ stats.active_tasks }}</h3>
+                    <small class="text-muted">Aktif</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="glass-card p-3 text-center fade-in" style="animation-delay: 0.3s;">
+                    <i class="bi bi-exclamation-triangle text-danger" style="font-size: 2rem;"></i>
+                    <h3 class="mb-0 mt-2" data-counter="{{ stats.overdue_tasks }}">{{ stats.overdue_tasks }}</h3>
+                    <small class="text-muted">Geciken</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tamamlanma Orani -->
+        <div class="glass-card p-4 mb-4 fade-in" style="animation-delay: 0.4s;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up text-turuncu me-2"></i>Tamamlanma Orani
+                </h5>
+                <span class="badge bg-turuncu fs-5">%{{ stats.completion_rate }}</span>
+            </div>
+            <div class="progress" style="height: 20px; background: rgba(255,255,255,0.1);">
+                <div class="progress-bar bg-turuncu progress-bar-striped progress-bar-animated"
+                     role="progressbar"
+                     style="width: {{ stats.completion_rate }}%;"
+                     aria-valuenow="{{ stats.completion_rate }}"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                </div>
+            </div>
+        </div>
+
+        <!-- Kategori Dagilimi -->
+        <div class="glass-card p-4 mb-4 fade-in" style="animation-delay: 0.5s;">
+            <h5 class="mb-4">
+                <i class="bi bi-pie-chart text-turuncu me-2"></i>Kategori Dagilimi
+            </h5>
+            {% if category_breakdown %}
+                {% for cat in category_breakdown %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>
+                            <span class="badge category-{{ cat.category|lower }} me-2">{{ cat.category }}</span>
+                        </span>
+                        <span class="text-muted small">
+                            {{ cat.completed }}/{{ cat.total }} (%{{ cat.completion_rate }})
+                        </span>
+                    </div>
+                    <div class="progress" style="height: 8px; background: rgba(255,255,255,0.1);">
+                        <div class="progress-bar"
+                             role="progressbar"
+                             style="width: {{ cat.completion_rate }}%; background: var(--turuncu);"
+                             aria-valuenow="{{ cat.completion_rate }}"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted text-center mb-0">
+                    <i class="bi bi-inbox me-2"></i>Henuz gorev eklenmemis.
+                </p>
+            {% endif %}
+        </div>
+
+        <!-- Haftalik Ilerleme -->
+        <div class="glass-card p-4 mb-4 fade-in" style="animation-delay: 0.6s;">
+            <h5 class="mb-4">
+                <i class="bi bi-bar-chart text-turuncu me-2"></i>Haftalik Ilerleme
+            </h5>
+            {% if weekly_progress %}
+            <div class="row text-center">
+                {% for week in weekly_progress %}
+                <div class="col">
+                    <div class="d-flex flex-column align-items-center">
+                        <!-- Bar -->
+                        <div class="weekly-bar-container">
+                            <div class="weekly-bar weekly-bar-created"
+                                 style="height: {{ [week.created * 15, 100] | min }}px;"
+                                 title="Olusturulan: {{ week.created }}">
+                            </div>
+                            <div class="weekly-bar weekly-bar-completed"
+                                 style="height: {{ [week.completed * 15, 100] | min }}px;"
+                                 title="Tamamlanan: {{ week.completed }}">
+                            </div>
+                        </div>
+                        <small class="text-muted mt-2">{{ week.week_label }}</small>
+                        <small class="text-success">+{{ week.completed }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="d-flex justify-content-center gap-4 mt-3">
+                <small><span class="legend-dot bg-secondary"></span> Olusturulan</small>
+                <small><span class="legend-dot bg-success"></span> Tamamlanan</small>
+            </div>
+            {% else %}
+                <p class="text-muted text-center mb-0">Henuz veri yok.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sag Kolon: Yan Bilgiler -->
+    <div class="col-lg-4">
+        <!-- Performans Rozeti -->
+        <div class="glass-card p-4 mb-4 text-center fade-in" style="animation-delay: 0.2s;">
+            <i class="bi bi-{{ badge.icon }} text-{{ badge.color }}" style="font-size: 4rem;"></i>
+            <h4 class="mt-3 mb-1">{{ badge.name }}</h4>
+            <p class="text-muted small mb-0">Performans Seviyesi</p>
+        </div>
+
+        <!-- Streak -->
+        <div class="glass-card p-4 mb-4 text-center fade-in" style="animation-delay: 0.3s;">
+            <i class="bi bi-fire text-danger" style="font-size: 3rem;"></i>
+            <h3 class="mt-2 mb-0" data-counter="{{ stats.streak_days }}">{{ stats.streak_days }}</h3>
+            <p class="text-muted small mb-0">Gun Serisi</p>
+        </div>
+
+        <!-- Odak Skoru -->
+        <div class="glass-card p-4 mb-4 text-center fade-in" style="animation-delay: 0.4s;">
+            <i class="bi bi-bullseye text-turuncu" style="font-size: 3rem;"></i>
+            <h3 class="mt-2 mb-0">{{ stats.focus_score }}</h3>
+            <p class="text-muted small mb-0">Odak Skoru</p>
+        </div>
+
+        <!-- Oncelik Dagilimi -->
+        <div class="glass-card p-4 mb-4 fade-in" style="animation-delay: 0.5s;">
+            <h6 class="mb-3">
+                <i class="bi bi-flag text-turuncu me-2"></i>Oncelik Dagilimi
+            </h6>
+            <div class="d-flex justify-content-between mb-2">
+                <span><span class="badge priority-high me-1">Yuksek</span></span>
+                <span>{{ stats.tasks_by_priority.high }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span><span class="badge priority-normal me-1">Normal</span></span>
+                <span>{{ stats.tasks_by_priority.normal }}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span><span class="badge priority-low me-1">Dusuk</span></span>
+                <span>{{ stats.tasks_by_priority.low }}</span>
+            </div>
+        </div>
+
+        <!-- En Cok Kategori -->
+        <div class="glass-card p-4 mb-4 fade-in" style="animation-delay: 0.6s;">
+            <h6 class="mb-3">
+                <i class="bi bi-star text-turuncu me-2"></i>Odak Alanlari
+            </h6>
+            <div class="mb-2">
+                <small class="text-muted d-block">En Cok Planlanan</small>
+                <span class="badge category-{{ stats.most_planned_category|lower }}">
+                    {{ stats.most_planned_category }}
+                </span>
+            </div>
+            <div>
+                <small class="text-muted d-block">En Cok Tamamlanan</small>
+                <span class="badge category-{{ stats.most_completed_category|lower }}">
+                    {{ stats.most_completed_category }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Ortalama Tamamlanma Suresi -->
+        {% if stats.avg_completion_time %}
+        <div class="glass-card p-4 mb-4 text-center fade-in" style="animation-delay: 0.7s;">
+            <i class="bi bi-clock-history text-info" style="font-size: 2.5rem;"></i>
+            <h4 class="mt-2 mb-0">{{ stats.avg_completion_time }}</h4>
+            <p class="text-muted small mb-0">Ort. Tamamlanma Suresi</p>
+        </div>
+        {% endif %}
+
+        <!-- Bu Hafta -->
+        <div class="glass-card p-4 mb-4 text-center fade-in" style="animation-delay: 0.8s;">
+            <i class="bi bi-calendar-week text-turuncu" style="font-size: 2.5rem;"></i>
+            <h3 class="mt-2 mb-0" data-counter="{{ stats.weekly_completed }}">{{ stats.weekly_completed }}</h3>
+            <p class="text-muted small mb-0">Bu Hafta Tamamlanan</p>
+        </div>
+    </div>
+</div>
+
+<!-- AI Yorumu -->
+<div class="glass-card p-4 mt-2 fade-in" style="animation-delay: 0.9s;">
+    <div class="d-flex align-items-start">
+        <div class="me-3">
+            {% if ai_available %}
+                <i class="bi bi-robot text-turuncu" style="font-size: 2.5rem;"></i>
+            {% else %}
+                <i class="bi bi-chat-quote text-turuncu" style="font-size: 2.5rem;"></i>
+            {% endif %}
+        </div>
+        <div>
+            <h6 class="mb-2">
+                {% if ai_available %}
+                    <span class="badge bg-turuncu me-2">AI</span>Kisisel Degerlendirme
+                {% else %}
+                    Performans Degerlendirmesi
+                {% endif %}
+            </h6>
+            <p class="mb-0 text-light">{{ ai_comment }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Yaklasan Deadline'lar -->
+{% if upcoming_tasks %}
+<div class="glass-card p-4 mt-4 fade-in" style="animation-delay: 1s;">
+    <h5 class="mb-4">
+        <i class="bi bi-alarm text-warning me-2"></i>Yaklasan Son Tarihler
+    </h5>
+    <div class="table-responsive">
+        <table class="table table-glass mb-0">
+            <thead>
+                <tr>
+                    <th>Gorev</th>
+                    <th>Kategori</th>
+                    <th>Son Tarih</th>
+                    <th>Kalan</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in upcoming_tasks %}
+                <tr>
+                    <td>{{ task.title }}</td>
+                    <td><span class="badge category-{{ task.category|lower }}">{{ task.category }}</span></td>
+                    <td>{{ task.deadline.strftime('%d.%m.%Y') }}</td>
+                    <td>
+                        {% if task.days_until_deadline < 0 %}
+                            <span class="badge bg-danger">{{ task.days_until_deadline|abs }} gun gecti</span>
+                        {% elif task.days_until_deadline == 0 %}
+                            <span class="badge bg-warning">Bugun</span>
+                        {% elif task.days_until_deadline == 1 %}
+                            <span class="badge bg-warning">Yarin</span>
+                        {% else %}
+                            <span class="badge bg-info">{{ task.days_until_deadline }} gun</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<style>
+    .bg-turuncu {
+        background-color: var(--turuncu) !important;
+    }
+    .progress {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .progress-bar {
+        border-radius: 10px;
+    }
+
+    /* Haftalik bar grafik */
+    .weekly-bar-container {
+        display: flex;
+        gap: 4px;
+        align-items: flex-end;
+        height: 100px;
+    }
+    .weekly-bar {
+        width: 20px;
+        border-radius: 4px 4px 0 0;
+        min-height: 5px;
+        transition: height 0.5s ease;
+    }
+    .weekly-bar-created {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    .weekly-bar-completed {
+        background: var(--bs-success);
+    }
+
+    /* Legend */
+    .legend-dot {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 6px;
+    }
+</style>
+{% endblock %}

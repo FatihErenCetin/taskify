@@ -45,6 +45,11 @@ class User(UserMixin, db.Model):
     preferred_language = db.Column(db.String(5), default='tr')
     ai_features_enabled = db.Column(db.Boolean, default=True)
 
+    # === AI Comment Cache ===
+    ai_comment_cache = db.Column(db.Text, nullable=True)
+    ai_comment_updated_at = db.Column(db.DateTime, nullable=True)
+    stats_hash = db.Column(db.String(64), nullable=True)  # İstatistik değişikliği kontrolü için
+
 
     # === Relationships ===
 
@@ -92,6 +97,61 @@ class User(UserMixin, db.Model):
         Returns the username.
         """
         return f'<User {self.username}>'
+
+
+# === GROUP MEMBERSHIP ASSOCIATION TABLE ===
+group_members = db.Table('group_members',
+    db.Column('group_id', db.Integer, db.ForeignKey('groups.id'), primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
+    db.Column('joined_at', db.DateTime, default=datetime.utcnow)
+)
+
+
+class Group(db.Model):
+    """
+    Group Model
+    -----------
+    Represents a user group for task assignment.
+
+    The creator of the group becomes the group admin.
+    Group admins can assign tasks to group members.
+    """
+    __tablename__ = 'groups'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Group creator/admin
+    admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    # Relationships
+    admin = db.relationship('User', backref='administered_groups', foreign_keys=[admin_id])
+    members = db.relationship('User', secondary=group_members,
+                              backref=db.backref('groups', lazy='dynamic'),
+                              lazy='dynamic')
+
+    def is_admin(self, user):
+        """Check if user is the group admin."""
+        return self.admin_id == user.id
+
+    def is_member(self, user):
+        """Check if user is a member of the group."""
+        return self.members.filter(group_members.c.user_id == user.id).count() > 0
+
+    def add_member(self, user):
+        """Add a user to the group."""
+        if not self.is_member(user):
+            self.members.append(user)
+
+    def remove_member(self, user):
+        """Remove a user from the group."""
+        if self.is_member(user):
+            self.members.remove(user)
+
+    def __repr__(self):
+        return f'<Group {self.name}>'
 
 
 class Task(db.Model):

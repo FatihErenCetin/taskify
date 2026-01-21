@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}Profil - {{ current_user.username }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <!-- Profil Karti -->
+        <div class="card glass-card fade-in">
+            <div class="card-header card-header-turuncu">
+                <h4 class="mb-0">
+                    <i class="bi bi-person-circle me-2"></i>Profil
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <!-- Kullanici Bilgileri -->
+                <div class="text-center mb-4">
+                    <div class="profile-avatar mb-3">
+                        <i class="bi bi-person-circle" style="font-size: 5rem; color: var(--turuncu);"></i>
+                    </div>
+                    <h3 class="mb-1">{{ current_user.username }}</h3>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-envelope me-1"></i>{{ current_user.email }}
+                    </p>
+                    <p class="text-muted small">
+                        <i class="bi bi-calendar-event me-1"></i>
+                        Uyelik: {{ current_user.created_at.strftime('%d.%m.%Y') }}
+                    </p>
+                </div>
+
+                <!-- Istatistikler -->
+                <div class="row text-center mb-4">
+                    <div class="col-4">
+                        <div class="glass-card p-3">
+                            <h2 class="text-turuncu mb-0" data-counter="{{ total_tasks }}">{{ total_tasks }}</h2>
+                            <small class="text-muted">Toplam Gorev</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="glass-card p-3">
+                            <h2 class="text-success mb-0" data-counter="{{ completed_tasks }}">{{ completed_tasks }}</h2>
+                            <small class="text-muted">Tamamlanan</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="glass-card p-3">
+                            <h2 class="text-warning mb-0" data-counter="{{ active_tasks }}">{{ active_tasks }}</h2>
+                            <small class="text-muted">Aktif</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tamamlanma Orani -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Tamamlanma Orani</span>
+                        <span class="text-turuncu fw-bold">%{{ completion_rate }}</span>
+                    </div>
+                    <div class="progress" style="height: 10px; background: rgba(255,255,255,0.1);">
+                        <div class="progress-bar bg-turuncu"
+                             role="progressbar"
+                             style="width: {{ completion_rate }}%;"
+                             aria-valuenow="{{ completion_rate }}"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rol Bilgisi -->
+                <div class="glass-card p-3 mb-4" style="background: rgba(249, 115, 22, 0.1);">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-shield-check text-turuncu me-3" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <p class="mb-0 fw-bold">
+                                {% if current_user.is_admin() %}
+                                    <span class="badge bg-danger">Admin</span>
+                                {% else %}
+                                    <span class="badge bg-primary">Kullanici</span>
+                                {% endif %}
+                            </p>
+                            <small class="text-muted">Hesap Rolu</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tercihler -->
+                <div class="glass-card p-3">
+                    <h6 class="mb-3">
+                        <i class="bi bi-gear me-2"></i>Tercihler
+                    </h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted d-block">Dil</small>
+                            <span>
+                                {% if current_user.preferred_language == 'tr' %}
+                                    <i class="bi bi-globe me-1"></i>Turkce
+                                {% else %}
+                                    <i class="bi bi-globe me-1"></i>English
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">AI Ozellikleri</small>
+                            <span>
+                                {% if current_user.ai_features_enabled %}
+                                    <i class="bi bi-robot text-success me-1"></i>Aktif
+                                {% else %}
+                                    <i class="bi bi-robot text-muted me-1"></i>Kapali
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hizli Erisim -->
+        <div class="glass-card p-4 mt-4 fade-in" style="animation-delay: 0.2s;">
+            <h5 class="mb-3">
+                <i class="bi bi-lightning-charge text-turuncu me-2"></i>Hizli Erisim
+            </h5>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="/tasks" class="btn btn-glass">
+                    <i class="bi bi-list-task me-1"></i>Gorevlerim
+                </a>
+                <a href="/tasks/add" class="btn btn-glass">
+                    <i class="bi bi-plus-circle me-1"></i>Yeni Gorev
+                </a>
+                <a href="/stats" class="btn btn-glass">
+                    <i class="bi bi-graph-up me-1"></i>Istatistikler
+                </a>
+                <a href="/settings" class="btn btn-glass">
+                    <i class="bi bi-gear me-1"></i>Ayarlar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-turuncu {
+        background-color: var(--turuncu) !important;
+    }
+    .progress {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .progress-bar {
+        border-radius: 10px;
+        transition: width 1s ease-in-out;
+    }
+</style>
+{% endblock %}

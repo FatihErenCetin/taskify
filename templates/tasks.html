@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+
+{% block title %}Gorev Listesi{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <h1 class="section-title mb-0">
+        <i class="bi bi-list-task me-2"></i>Gorev Listesi
+    </h1>
+    <a href="/tasks/add" class="btn btn-turuncu">
+        <i class="bi bi-plus-circle me-2"></i>Yeni Gorev
+    </a>
+</div>
+
+<!-- ==========================================
+     AKTIF GOREVLER
+     ========================================== -->
+<div class="glass-card p-4 mb-5 fade-in">
+    <h3 class="mb-4">
+        <i class="bi bi-hourglass-split text-turuncu me-2"></i>
+        Aktif Gorevler
+        <span class="badge bg-turuncu ms-2">{{ active_tasks|length }}</span>
+    </h3>
+
+    {% if active_tasks %}
+        <div class="table-responsive">
+            <table class="table table-glass">
+                <thead>
+                    <tr>
+                        <th><i class="bi bi-card-text me-1"></i>Gorev</th>
+                        <th><i class="bi bi-tag me-1"></i>Kategori</th>
+                        <th><i class="bi bi-flag me-1"></i>Oncelik</th>
+                        <th><i class="bi bi-person-fill me-1"></i>Atayan</th>
+                        <th><i class="bi bi-clock me-1"></i>Kalan Sure</th>
+                        <th><i class="bi bi-calendar-event me-1"></i>Son Tarih</th>
+                        <th><i class="bi bi-calendar-plus me-1"></i>Eklenme</th>
+                        <th><i class="bi bi-gear me-1"></i>Islemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in active_tasks %}
+                    <tr>
+                        <td>
+                            <strong>{{ task.title }}</strong>
+                            {% if task.description %}
+                                <br><small class="text-muted">{{ task.description }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.category == 'Work' %}
+                                <span class="badge kategori-is">
+                                    <i class="bi bi-briefcase me-1"></i>Is
+                                </span>
+                            {% elif task.category == 'Personal' %}
+                                <span class="badge kategori-kisisel">
+                                    <i class="bi bi-person me-1"></i>Kisisel
+                                </span>
+                            {% elif task.category == 'Health' %}
+                                <span class="badge kategori-saglik">
+                                    <i class="bi bi-heart-pulse me-1"></i>Saglik
+                                </span>
+                            {% elif task.category == 'Education' %}
+                                <span class="badge kategori-egitim">
+                                    <i class="bi bi-book me-1"></i>Egitim
+                                </span>
+                            {% elif task.category == 'Finance' %}
+                                <span class="badge kategori-finans">
+                                    <i class="bi bi-cash-stack me-1"></i>Finans
+                                </span>
+                            {% else %}
+                                <span class="badge kategori-genel">
+                                    <i class="bi bi-pin me-1"></i>Genel
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.priority == 1 %}
+                                <span class="oncelik-yuksek">
+                                    <i class="bi bi-circle-fill me-1"></i>Yuksek
+                                </span>
+                            {% elif task.priority == 2 %}
+                                <span class="oncelik-normal">
+                                    <i class="bi bi-circle-fill me-1"></i>Normal
+                                </span>
+                            {% else %}
+                                <span class="oncelik-dusuk">
+                                    <i class="bi bi-circle-fill me-1"></i>Dusuk
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.creator and task.creator.id != current_user.id %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-person me-1"></i>{{ task.creator.username }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted small">Kendim</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.deadline != None %}
+                                {% set kalan = (task.deadline - now).days %}
+                                {% if kalan < 0 %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>{{ -kalan }} gun gecikti!
+                                    </span>
+                                {% elif kalan >= 0 and kalan <= 7 %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-alarm me-1"></i>{{ kalan }} gun kaldi
+                                    </span>
+                                {% elif kalan > 7 and kalan <= 14 %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-clock-history me-1"></i>{{ kalan }} gun kaldi
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-calendar-check me-1"></i>{{ kalan }} gun kaldi
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.deadline %}
+                                <span class="badge badge-glass">
+                                    <i class="bi bi-calendar3 me-1"></i>
+                                    {{ task.deadline.strftime('%d.%m.%Y') }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>
+                                {{ task.created_at.strftime('%d.%m.%Y') if task.created_at else '-' }}
+                            </small>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="/tasks/{{ task.id }}/toggle"
+                                   class="btn btn-sm btn-success"
+                                   data-bs-toggle="tooltip"
+                                   title="Tamamla">
+                                    <i class="bi bi-check-lg"></i>
+                                </a>
+                                {% if task.assigned_by_id == current_user.id %}
+                                <a href="/tasks/{{ task.id }}/delete"
+                                   class="btn btn-sm btn-outline-danger"
+                                   onclick="return confirm('Bu gorevi silmek istediginize emin misiniz?')"
+                                   data-bs-toggle="tooltip"
+                                   title="Sil">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-emoji-smile me-2"></i>
+            Tum gorevler tamamlandi!
+            <a href="/tasks/add" class="alert-link ms-2">
+                <i class="bi bi-plus-circle me-1"></i>Yeni gorev ekle
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- ==========================================
+     TAMAMLANMIS GOREVLER
+     ========================================== -->
+<div class="glass-card p-4 fade-in" style="animation-delay: 0.2s;">
+    <h3 class="mb-4">
+        <i class="bi bi-check-circle text-success me-2"></i>
+        Tamamlanan Gorevler
+        <span class="badge bg-success ms-2">{{ completed_tasks|length }}</span>
+    </h3>
+
+    {% if completed_tasks %}
+        <div class="table-responsive">
+            <table class="table table-glass">
+                <thead class="bg-secondary" style="background: linear-gradient(135deg, #64748b, #475569) !important;">
+                    <tr>
+                        <th><i class="bi bi-card-text me-1"></i>Gorev</th>
+                        <th><i class="bi bi-tag me-1"></i>Kategori</th>
+                        <th><i class="bi bi-person-fill me-1"></i>Atayan</th>
+                        <th><i class="bi bi-calendar-check me-1"></i>Tamamlanma</th>
+                        <th><i class="bi bi-gear me-1"></i>Islemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in completed_tasks %}
+                    <tr class="row-completed">
+                        <td>
+                            <strong class="tamamlandi">{{ task.title }}</strong>
+                            {% if task.description %}
+                                <br><small class="text-muted tamamlandi">{{ task.description }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.category == 'Work' %}
+                                <span class="badge kategori-is">
+                                    <i class="bi bi-briefcase me-1"></i>Is
+                                </span>
+                            {% elif task.category == 'Personal' %}
+                                <span class="badge kategori-kisisel">
+                                    <i class="bi bi-person me-1"></i>Kisisel
+                                </span>
+                            {% elif task.category == 'Health' %}
+                                <span class="badge kategori-saglik">
+                                    <i class="bi bi-heart-pulse me-1"></i>Saglik
+                                </span>
+                            {% elif task.category == 'Education' %}
+                                <span class="badge kategori-egitim">
+                                    <i class="bi bi-book me-1"></i>Egitim
+                                </span>
+                            {% elif task.category == 'Finance' %}
+                                <span class="badge kategori-finans">
+                                    <i class="bi bi-cash-stack me-1"></i>Finans
+                                </span>
+                            {% else %}
+                                <span class="badge kategori-genel">
+                                    <i class="bi bi-pin me-1"></i>Genel
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.creator and task.creator.id != current_user.id %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-person me-1"></i>{{ task.creator.username }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted small">Kendim</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                <i class="bi bi-check2-circle me-1"></i>
+                                {{ task.completed_at.strftime('%d.%m.%Y %H:%M') if task.completed_at else '-' }}
+                            </small>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="/tasks/{{ task.id }}/toggle"
+                                   class="btn btn-sm btn-outline-warning"
+                                   data-bs-toggle="tooltip"
+                                   title="Geri Al">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </a>
+                                {% if task.assigned_by_id == current_user.id %}
+                                <a href="/tasks/{{ task.id }}/delete"
+                                   class="btn btn-sm btn-outline-danger"
+                                   onclick="return confirm('Bu gorevi silmek istediginize emin misiniz?')"
+                                   data-bs-toggle="tooltip"
+                                   title="Sil">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-secondary">
+            <i class="bi bi-info-circle me-2"></i>
+            Henuz tamamlanan gorev yok.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

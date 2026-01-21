@@ -5,19 +5,13 @@ Smart Task Manager - Main Application
 Flask-based task management with NLP categorization and multi-language support.
 """
 
-from flask import (
-    Flask, render_template, request, redirect, 
-    url_for, flash, session, jsonify
-)
-from flask_login import (
-    LoginManager, login_user, logout_user, 
-    login_required, current_user
-)
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_babel import Babel, _
 from datetime import datetime
 
 from config import get_config
-from models import db, User, Task
+from models import db, User, Task, Group, group_members
 from services.nlp_service import NLPService
 from services.stats_service import StatsService
 
@@ -37,23 +31,31 @@ def create_app(config_class=None):
     
     # Initialize extensions
     db.init_app(app)
-    babel.init_app(app)
-    login_manager.init_app(app)
+    #babel.init_app(app)
+    #login_manager.init_app(app)
     
     # Register blueprints (if any)
     # app.register_blueprint(...)
     
     return app
 
-
 # ============================================================
-# EXTENSION INSTANCES
+# LOCALE SELECTOR FUNCTION
 # ============================================================
 
-babel = Babel()
-login_manager = LoginManager()
-login_manager.login_view = 'login'
-login_manager.login_message_category = 'warning'
+def get_locale():
+    """Select best matching language."""
+    # Check session first
+    if 'language' in session:
+        return session['language']
+
+    # Check user preference
+    try:
+        if current_user.is_authenticated and hasattr(current_user, 'preferred_language'):
+            if current_user.preferred_language:
+                return current_user.preferred_language
+    except:
+        pass
 
 
 # ============================================================
@@ -65,26 +67,19 @@ app.config.from_object(get_config())
 
 # Initialize extensions
 db.init_app(app)
-babel.init_app(app)
+login_manager = LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message_category = 'warning'
 
+#babel.init_app(app)
 
 # ============================================================
-# BABEL CONFIGURATION
+# EXTENSION INSTANCES
 # ============================================================
 
-@babel.localeselector
-def get_locale():
-    """Select best matching language."""
-    if 'language' in session:
-        return session['language']
-    
-    if current_user.is_authenticated and current_user.preferred_language:
-        return current_user.preferred_language
-    
-    return request.accept_languages.best_match(
-        app.config['BABEL_SUPPORTED_LOCALES']
-    )
+# Initialize Babel with locale_selector (Flask-Babel 3.0+ syntax)
+babel = Babel(app, locale_selector=get_locale)
 
 
 @app.route('/set-language/<language>')
@@ -279,8 +274,8 @@ def add_task():
         selected_priority = request.form.get('priority', '0')
         selected_category = request.form.get('category', 'auto')
         deadline_str = request.form.get('deadline', '')
-        use_nlp = request.form.get('use_nlp') == 'on'
-        
+        analysis_mode = request.form.get('analysis_mode', 'rule')  # manual, rule, ai
+
         # Initialize with defaults
         category = app.config['DEFAULT_CATEGORY']
         priority = app.config['DEFAULT_PRIORITY']
@@ -288,7 +283,7 @@ def add_task():
         category_source = 'manual'
         priority_source = 'manual'
         deadline_source = 'manual'
-        
+
         # Parse manual deadline
         if deadline_str:
             try:
@@ -296,38 +291,59 @@ def add_task():
                 deadline_source = 'manual'
             except ValueError:
                 pass
-        
-        # Use NLP analysis if enabled
-        if use_nlp or selected_category == 'auto' or selected_priority == '0':
+
+        # Determine analysis mode
+        if analysis_mode == 'manual':
+            # Full manual mode - no automatic analysis
+            category = selected_category if selected_category != 'auto' else 'General'
+            priority = int(selected_priority) if selected_priority != '0' else 2
+            category_source = 'manual'
+            priority_source = 'manual'
+        elif analysis_mode in ('rule', 'ai'):
+            # Automatic analysis mode
+            use_ai = (analysis_mode == 'ai')
+
             analysis = NLPService.analyze_task(
-                title, 
+                title,
                 description,
-                use_ai=current_user.ai_features_enabled
+                use_ai=use_ai
             )
-            
+
             # Auto category
             if selected_category == 'auto':
                 category = analysis['category']
                 category_source = analysis['category_source']
             else:
                 category = selected_category
-            
+                category_source = 'manual'
+
             # Auto priority
             if selected_priority == '0':
                 priority = analysis['priority']
                 priority_source = analysis['priority_source']
             else:
                 priority = int(selected_priority)
-            
+                priority_source = 'manual'
+
             # Extract deadline from text if not manually set
             if not deadline and analysis.get('deadline'):
                 deadline = analysis['deadline']
                 deadline_source = analysis.get('deadline_source', 'parsed')
-        else:
-            # Manual selection
-            category = selected_category
-            priority = int(selected_priority) if selected_priority else 2
         
+        # Determine task assignment
+        assign_to_id = current_user.id
+        assign_to_str = request.form.get('assign_to', '')
+        if assign_to_str and assign_to_str != str(current_user.id):
+            # Verify user is in one of current_user's groups
+            assigned_user_id = int(assign_to_str)
+            my_groups = Group.query.filter_by(admin_id=current_user.id).all()
+            valid_member_ids = set()
+            for g in my_groups:
+                for member in g.members:
+                    valid_member_ids.add(member.id)
+            if assigned_user_id in valid_member_ids:
+                assign_to_id = assigned_user_id
+
         # Create task
         new_task = Task(
             title=title,
@@ -338,7 +354,7 @@ def add_task():
             category_source=category_source,
             priority_source=priority_source,
             deadline_source=deadline_source,
-            user_id=current_user.id,
+            user_id=assign_to_id,
             assigned_by_id=current_user.id
         )
         
@@ -349,10 +365,23 @@ def add_task():
         return redirect(url_for('tasks'))
     
     # GET - show form with categories and priorities
+    # Grup admini ise, grubundaki üyeleri getir
+    assignable_users = []
+    my_groups = Group.query.filter_by(admin_id=current_user.id).all()
+    if my_groups:
+        seen_ids = set()
+        for g in my_groups:
+            for member in g.members:
+                if member.id not in seen_ids:
+                    assignable_users.append(member)
+                    seen_ids.add(member.id)
+
     return render_template(
         'add_task.html',
         categories=NLPService.get_all_categories(),
-        priorities=NLPService.get_all_priorities()
+        priorities=NLPService.get_all_priorities(),
+        users=assignable_users,
+        groups=my_groups
     )
 
 
@@ -401,16 +430,17 @@ def edit_task(task_id):
 @app.route('/tasks/<int:task_id>/delete')
 @login_required
 def delete_task(task_id):
-    """Delete a task."""
+    """Delete a task. Only the creator (assigner) can delete."""
     task = Task.query.get_or_404(task_id)
-    
-    if task.user_id != current_user.id:
-        flash(_('access_denied'), 'danger')
+
+    # Sadece görevi oluşturan/atayan kişi silebilir
+    if task.assigned_by_id != current_user.id:
+        flash('Sadece gorevi atayan kisi silebilir.', 'danger')
         return redirect(url_for('tasks'))
-    
+
     db.session.delete(task)
     db.session.commit()
-    
+
     flash(_('task_deleted'), 'info')
     return redirect(url_for('tasks'))
 
@@ -518,8 +548,157 @@ def api_nlp_status():
 
 
 # ============================================================
+# ROUTES - GROUPS
+# ============================================================
+
+@app.route('/groups')
+@login_required
+def groups():
+    """List user's groups."""
+    # Gruplar: Admin olduklarım + Üye olduklarım
+    administered_groups = Group.query.filter_by(admin_id=current_user.id).all()
+    member_groups = current_user.groups.all()
+
+    return render_template(
+        'groups.html',
+        administered_groups=administered_groups,
+        member_groups=member_groups
+    )
+
+
+@app.route('/groups/create', methods=['GET', 'POST'])
+@login_required
+def create_group():
+    """Create a new group."""
+    if request.method == 'POST':
+        name = request.form['name']
+        description = request.form.get('description', '')
+        member_ids = request.form.getlist('members')
+
+        # Create group
+        group = Group(
+            name=name,
+            description=description,
+            admin_id=current_user.id
+        )
+        db.session.add(group)
+        db.session.flush()  # Get group ID
+
+        # Add selected members
+        for member_id in member_ids:
+            user = User.query.get(int(member_id))
+            if user and user.id != current_user.id:
+                group.add_member(user)
+
+        db.session.commit()
+        flash('Grup basariyla olusturuldu!', 'success')
+        return redirect(url_for('groups'))
+
+    # GET - show form with all users except current
+    all_users = User.query.filter(User.id != current_user.id).all()
+    return render_template('create_group.html', users=all_users)
+
+
+@app.route('/groups/<int:group_id>')
+@login_required
+def view_group(group_id):
+    """View group details."""
+    group = Group.query.get_or_404(group_id)
+
+    # Check access: must be admin or member
+    if not group.is_admin(current_user) and not group.is_member(current_user):
+        flash('Bu gruba erisim izniniz yok.', 'danger')
+        return redirect(url_for('groups'))
+
+    return render_template('view_group.html', group=group)
+
+
+@app.route('/groups/<int:group_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_group(group_id):
+    """Edit group (admin only)."""
+    group = Group.query.get_or_404(group_id)
+
+    if not group.is_admin(current_user):
+        flash('Sadece grup admini duzenleyebilir.', 'danger')
+        return redirect(url_for('groups'))
+
+    if request.method == 'POST':
+        group.name = request.form['name']
+        group.description = request.form.get('description', '')
+
+        # Update members
+        new_member_ids = set(map(int, request.form.getlist('members')))
+        current_member_ids = set(m.id for m in group.members.all())
+
+        # Remove members not in new list
+        for member_id in current_member_ids - new_member_ids:
+            user = User.query.get(member_id)
+            if user:
+                group.remove_member(user)
+
+        # Add new members
+        for member_id in new_member_ids - current_member_ids:
+            user = User.query.get(member_id)
+            if user and user.id != current_user.id:
+                group.add_member(user)
+
+        db.session.commit()
+        flash('Grup guncellendi!', 'success')
+        return redirect(url_for('view_group', group_id=group_id))
+
+    all_users = User.query.filter(User.id != current_user.id).all()
+    current_members = [m.id for m in group.members.all()]
+
+    return render_template(
+        'edit_group.html',
+        group=group,
+        users=all_users,
+        current_members=current_members
+    )
+
+
+@app.route('/groups/<int:group_id>/delete')
+@login_required
+def delete_group(group_id):
+    """Delete group (admin only)."""
+    group = Group.query.get_or_404(group_id)
+
+    if not group.is_admin(current_user):
+        flash('Sadece grup admini silebilir.', 'danger')
+        return redirect(url_for('groups'))
+
+    db.session.delete(group)
+    db.session.commit()
+
+    flash('Grup silindi.', 'info')
+    return redirect(url_for('groups'))
+
+
+# ============================================================
 # ROUTES - SETTINGS
 # ============================================================
+
+@app.route('/profile')
+@login_required
+def profile():
+    """User profile page."""
+    # Get user statistics
+    total_tasks = Task.query.filter_by(user_id=current_user.id).count()
+    completed_tasks = Task.query.filter_by(user_id=current_user.id, is_completed=True).count()
+    active_tasks = total_tasks - completed_tasks
+
+    # Calculate completion rate
+    completion_rate = round((completed_tasks / total_tasks * 100), 1) if total_tasks > 0 else 0
+
+    return render_template(
+        'profile.html',
+        total_tasks=total_tasks,
+        completed_tasks=completed_tasks,
+        active_tasks=active_tasks,
+        completion_rate=completion_rate
+    )
+
 
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required

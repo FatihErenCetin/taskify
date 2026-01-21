@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Hakkimda{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card glass-card fade-in">
+            <div class="card-header card-header-turuncu text-center">
+                <h4 class="mb-0">
+                    <i class="bi bi-person-circle me-2"></i>Hakkimda
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <!-- Profil Alani -->
+                <div class="text-center mb-4">
+                    <div class="rounded-circle bg-turuncu d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 100px; height: 100px;">
+                        <i class="bi bi-person-fill text-white" style="font-size: 3rem;"></i>
+                    </div>
+                </div>
+
+                <!-- Bilgiler -->
+                <div class="glass-card p-3 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-person text-turuncu me-3" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <small class="text-muted d-block">Isim</small>
+                            <strong>Fatih</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-3 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-geo-alt text-turuncu me-3" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <small class="text-muted d-block">Sehir</small>
+                            <strong>Ankara</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-3 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-briefcase text-turuncu me-3" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <small class="text-muted d-block">Meslek</small>
+                            <strong>Data Scientist</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-3 mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-code-slash text-turuncu me-3" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <small class="text-muted d-block">Ogreniyorum</small>
+                            <strong>Python, Flask, Web Gelistirme</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Beceriler -->
+                <h6 class="mb-3">
+                    <i class="bi bi-tools text-turuncu me-2"></i>Beceriler
+                </h6>
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <span class="badge bg-turuncu">Python</span>
+                    <span class="badge bg-turuncu">Flask</span>
+                    <span class="badge bg-turuncu">NLP</span>
+                    <span class="badge badge-glass">Machine Learning</span>
+                    <span class="badge badge-glass">Data Analysis</span>
+                    <span class="badge badge-glass">SQL</span>
+                </div>
+
+                <!-- Geri Don Butonu -->
+                <a href="/" class="btn btn-outline-turuncu w-100">
+                    <i class="bi bi-arrow-left me-2"></i>Ana Sayfaya Don
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

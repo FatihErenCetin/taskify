@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 from collections import Counter
 from flask import current_app
+import hashlib
 
 from models import db, Task, User
 from core.stats_ai import (
@@ -155,21 +156,40 @@ class StatsService:
         return streak
     
     @staticmethod
-    def get_ai_comment(user_id: int, language: str = 'tr', 
+    def _calculate_stats_hash(stats: Dict[str, Any]) -> str:
+        """Calculate hash of stats to detect changes."""
+        key_values = f"{stats.get('total_tasks', 0)}_{stats.get('completed_tasks', 0)}_{stats.get('completion_rate', 0)}"
+        return hashlib.md5(key_values.encode()).hexdigest()
+
+    @staticmethod
+    def get_ai_comment(user_id: int, language: str = 'tr',
                        use_ai: bool = None) -> str:
         """
-        Generate productivity comment for user.
-        
+        Generate productivity comment for user with caching.
+
         Args:
             user_id: User ID
             language: Target language ('tr' or 'en')
             use_ai: Override AI setting
-            
+
         Returns:
             Comment string
         """
         stats = StatsService.get_user_stats(user_id)
-        
+        user = User.query.get(user_id)
+
+        if not user:
+            return generate_template_comment(stats, language)
+
+        # Calculate current stats hash
+        current_hash = StatsService._calculate_stats_hash(stats)
+
+        # Check if cached comment is still valid
+        if (user.ai_comment_cache and
+            user.stats_hash == current_hash and
+            user.ai_comment_updated_at):
+            return user.ai_comment_cache
+
         # Determine if AI should be used
         if use_ai is None:
             try:
@@ -177,11 +197,28 @@ class StatsService:
                          current_app.config.get('AI_COMMENT_ENABLED', False)
             except RuntimeError:
                 use_ai = False
-        
+
+        # Generate new comment
         if use_ai and is_ai_available():
-            return generate_ai_comment(stats, language)
+            comment = generate_ai_comment(stats, language)
         else:
-            return generate_template_comment(stats, language)
+            comment = generate_template_comment(stats, language)
+
+        # Cache the comment
+        user.ai_comment_cache = comment
+        user.stats_hash = current_hash
+        user.ai_comment_updated_at = datetime.utcnow()
+        db.session.commit()
+
+        return comment
+
+    @staticmethod
+    def invalidate_ai_comment_cache(user_id: int):
+        """Invalidate AI comment cache for a user."""
+        user = User.query.get(user_id)
+        if user:
+            user.stats_hash = None
+            db.session.commit()
     
     @staticmethod
     def get_performance_badge(user_id: int, language: str = 'tr') -> Dict[str, str]:

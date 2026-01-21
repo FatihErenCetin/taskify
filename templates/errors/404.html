@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Sayfa Bulunamadi - 404{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-75">
+    <div class="col-md-8 col-lg-6 text-center">
+        <div class="glass-card p-5 fade-in">
+            <div class="mb-4">
+                <i class="bi bi-exclamation-triangle text-turuncu" style="font-size: 5rem;"></i>
+            </div>
+            <h1 class="display-1 text-turuncu fw-bold">404</h1>
+            <h3 class="mb-3">Sayfa Bulunamadi</h3>
+            <p class="text-muted mb-4">
+                Aradiginiz sayfa mevcut degil veya tasindi.
+            </p>
+
+            <!-- Hata Detaylari -->
+            <div class="glass-card p-3 mb-4" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
+                <p class="mb-1 small text-muted">
+                    <i class="bi bi-info-circle me-1"></i>Hata Kodu
+                </p>
+                <code class="text-danger">HTTP 404 - Not Found</code>
+                <p class="mb-0 mt-2 small text-muted">
+                    <i class="bi bi-link-45deg me-1"></i>Istenen URL: <code>{{ request.path }}</code>
+                </p>
+            </div>
+
+            <div class="d-flex justify-content-center gap-3">
+                <a href="/" class="btn btn-turuncu">
+                    <i class="bi bi-house me-2"></i>Ana Sayfa
+                </a>
+                <a href="/tasks" class="btn btn-outline-turuncu">
+                    <i class="bi bi-list-task me-2"></i>Gorevler
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .min-vh-75 {
+        min-height: 75vh;
+    }
+    code {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 0.2em 0.5em;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+</style>
+{% endblock %}

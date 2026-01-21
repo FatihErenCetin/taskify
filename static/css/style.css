@@ -1,94 +1,750 @@
 /* ==========================================
-   TASKIFY - TURUNCU TEMA
+   TASKIFY - TURUNCU GLASS MORPHISM TEMA
    ========================================== */
 
-/* Bootstrap Primary Rengi Override */
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* CSS Variables */
 :root {
     --bs-primary: #f97316;
     --bs-primary-rgb: 249, 115, 22;
     --turuncu: #f97316;
     --turuncu-koyu: #ea580c;
     --turuncu-acik: #fb923c;
+    --turuncu-glow: rgba(249, 115, 22, 0.5);
+
+    /* Glass efekt renkleri */
+    --glass-bg: rgba(255, 255, 255, 0.15);
+    --glass-border: rgba(255, 255, 255, 0.25);
+    --glass-shadow: rgba(0, 0, 0, 0.1);
+
+    /* Gradient arka plan */
+    --gradient-start: #1a1a2e;
+    --gradient-mid: #16213e;
+    --gradient-end: #0f3460;
 }
 
-/* Navbar turuncu */
-.navbar-turuncu {
-    background-color: var(--turuncu) !important;
+/* Global Styles */
+* {
+    font-family: 'Poppins', sans-serif;
 }
 
-/* Butonlar */
-.btn-turuncu {
-    background-color: var(--turuncu);
+html {
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-mid) 50%, var(--gradient-end) 100%);
+    background-attachment: fixed;
+    color: #ffffff;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Animated Background Orbs */
+body::before,
+body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    z-index: -1;
+    animation: float 20s ease-in-out infinite;
+}
+
+body::before {
+    width: 500px;
+    height: 500px;
+    background: var(--turuncu);
+    top: -200px;
+    right: -200px;
+}
+
+body::after {
+    width: 400px;
+    height: 400px;
+    background: var(--turuncu-acik);
+    bottom: -150px;
+    left: -150px;
+    animation-delay: -10s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+        transform: translate(30px, 30px) rotate(5deg);
+    }
+    50% {
+        transform: translate(0, 50px) rotate(0deg);
+    }
+    75% {
+        transform: translate(-30px, 30px) rotate(-5deg);
+    }
+}
+
+/* ==========================================
+   GLASS CARD COMPONENT
+   ========================================== */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow:
+        0 8px 32px var(--glass-shadow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-5px);
+    box-shadow:
+        0 15px 40px rgba(249, 115, 22, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    border-color: var(--turuncu-acik);
+}
+
+/* ==========================================
+   NAVBAR - GLASS STYLE
+   ========================================== */
+.navbar-glass {
+    background: rgba(249, 115, 22, 0.15) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(249, 115, 22, 0.3);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    padding: 1rem 0;
+}
+
+.navbar-glass .navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #fff !important;
+    text-shadow: 0 0 20px var(--turuncu-glow);
+    transition: all 0.3s ease;
+}
+
+.navbar-glass .navbar-brand:hover {
+    text-shadow: 0 0 30px var(--turuncu);
+    transform: scale(1.05);
+}
+
+.navbar-glass .nav-link {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    margin: 0 0.25rem;
+}
+
+.navbar-glass .nav-link:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.navbar-glass .btn-glass {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.navbar-glass .btn-glass:hover {
+    background: rgba(255, 255, 255, 0.25);
     border-color: var(--turuncu);
+    box-shadow: 0 0 20px var(--turuncu-glow);
+    transform: translateY(-2px);
+}
+
+/* ==========================================
+   BUTTONS - GLASS STYLE
+   ========================================== */
+.btn-turuncu {
+    background: linear-gradient(135deg, var(--turuncu) 0%, var(--turuncu-koyu) 100%);
+    border: none;
     color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px var(--turuncu-glow);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-turuncu::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
 }
 
 .btn-turuncu:hover {
-    background-color: var(--turuncu-koyu);
-    border-color: var(--turuncu-koyu);
+    background: linear-gradient(135deg, var(--turuncu-koyu) 0%, var(--turuncu) 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px var(--turuncu-glow);
     color: white;
+}
+
+.btn-turuncu:hover::before {
+    left: 100%;
 }
 
 .btn-outline-turuncu {
     color: var(--turuncu);
-    border-color: var(--turuncu);
+    border: 2px solid var(--turuncu);
+    background: transparent;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
 }
 
 .btn-outline-turuncu:hover {
-    background-color: var(--turuncu);
+    background: var(--turuncu);
     color: white;
+    box-shadow: 0 4px 20px var(--turuncu-glow);
+    transform: translateY(-3px);
 }
 
-/* Tablo başlık */
-.table-turuncu {
-    background-color: var(--turuncu) !important;
-    color: white;
+.btn-glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    transition: all 0.3s ease;
 }
 
-/* Kartlar */
+.btn-glass:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+/* ==========================================
+   FORMS - GLASS STYLE
+   ========================================== */
+.form-control-glass {
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+    border-radius: 12px;
+    padding: 0.875rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control-glass::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.form-control-glass:focus {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: var(--turuncu) !important;
+    box-shadow: 0 0 0 3px var(--turuncu-glow) !important;
+    color: #fff !important;
+}
+
+.form-select-glass {
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+    border-radius: 12px;
+    padding: 0.875rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-select-glass:focus {
+    border-color: var(--turuncu) !important;
+    box-shadow: 0 0 0 3px var(--turuncu-glow) !important;
+}
+
+.form-select-glass option {
+    background: var(--gradient-mid);
+    color: #fff;
+}
+
+.form-label {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-text {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* ==========================================
+   CARDS - GLASS STYLE
+   ========================================== */
+.card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px var(--glass-shadow);
+    overflow: hidden;
+}
+
 .card-header-turuncu {
-    background-color: var(--turuncu);
+    background: linear-gradient(135deg, var(--turuncu) 0%, var(--turuncu-koyu) 100%);
     color: white;
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
 }
 
-/* Badge */
-.badge-turuncu {
-    background-color: var(--turuncu);
-    color: white;
+.card-header-turuncu h4 {
+    margin: 0;
+    font-weight: 600;
 }
 
-/* Öncelik renkleri */
+.card-body {
+    padding: 1.5rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.card-title {
+    color: #fff;
+    font-weight: 600;
+}
+
+.card-text {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* ==========================================
+   TABLES - GLASS STYLE
+   ========================================== */
+.table-glass {
+    background: transparent !important;
+    color: #fff !important;
+    border-collapse: separate !important;
+    border-spacing: 0 8px !important;
+    --bs-table-bg: transparent !important;
+    --bs-table-striped-bg: transparent !important;
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.1) !important;
+}
+
+.table-glass thead {
+    background: var(--turuncu) !important;
+}
+
+.table-glass thead tr {
+    background: var(--turuncu) !important;
+}
+
+.table-glass thead th {
+    border: none !important;
+    padding: 1rem 1.25rem !important;
+    font-weight: 600 !important;
+    color: #fff !important;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    background: var(--turuncu) !important;
+    white-space: nowrap;
+}
+
+.table-glass thead tr th:first-child {
+    border-radius: 12px 0 0 12px;
+}
+
+.table-glass thead tr th:last-child {
+    border-radius: 0 12px 12px 0;
+}
+
+.table-glass tbody tr {
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.table-glass tbody tr:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    transform: scale(1.01);
+}
+
+.table-glass tbody td {
+    border: none !important;
+    padding: 1rem 1.25rem !important;
+    vertical-align: middle;
+    background: transparent !important;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.table-glass tbody tr td:first-child {
+    border-radius: 12px 0 0 12px;
+}
+
+.table-glass tbody tr td:last-child {
+    border-radius: 0 12px 12px 0;
+}
+
+/* Tamamlanan satir */
+.table-glass tbody tr.row-completed {
+    background: rgba(34, 197, 94, 0.1);
+    opacity: 0.8;
+}
+
+/* ==========================================
+   BADGES - GLASS STYLE
+   ========================================== */
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.85em;
+    border-radius: 8px;
+    font-size: 0.8rem;
+}
+
+.badge-glass {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+/* Oncelik renkleri */
 .oncelik-yuksek {
-    color: #dc3545;
-    font-weight: bold;
+    color: #ef4444;
+    font-weight: 600;
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
 }
 
 .oncelik-normal {
-    color: #ffc107;
+    color: #eab308;
+    font-weight: 500;
+    text-shadow: 0 0 10px rgba(234, 179, 8, 0.5);
 }
 
 .oncelik-dusuk {
-    color: #28a745;
+    color: #22c55e;
+    font-weight: 500;
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
 }
 
-/* Tamamlanmış görev */
+/* Tamamlanmis gorev */
 .tamamlandi {
     text-decoration: line-through;
-    opacity: 0.7;
+    opacity: 0.6;
 }
 
 /* Kategori badge renkleri */
-.kategori-is { background-color: #1969e0; }
-.kategori-kisisel { background-color: #6f42c1; }
-.kategori-saglik { background-color: #d63384; }
-.kategori-egitim { background-color: #fd7e14; }
-.kategori-finans { background-color: #20c997; }
-.kategori-genel { background-color: #6c757d; }
+.kategori-is { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.kategori-kisisel { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+.kategori-saglik { background: linear-gradient(135deg, #ec4899, #be185d); }
+.kategori-egitim { background: linear-gradient(135deg, #f97316, #ea580c); }
+.kategori-finans { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+.kategori-genel { background: linear-gradient(135deg, #64748b, #475569); }
 
-/* Bölüm başlıkları */
+/* ==========================================
+   ALERTS - GLASS STYLE
+   ========================================== */
+.alert {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: #fff;
+}
+
+.alert-info {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.alert-success {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.alert-warning {
+    background: rgba(234, 179, 8, 0.2);
+    border-color: rgba(234, 179, 8, 0.3);
+}
+
+.alert-danger {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.alert-secondary {
+    background: rgba(100, 116, 139, 0.2);
+    border-color: rgba(100, 116, 139, 0.3);
+}
+
+.alert-link {
+    color: var(--turuncu-acik);
+    font-weight: 600;
+}
+
+/* ==========================================
+   SECTION TITLES
+   ========================================== */
 .section-title {
+    color: #fff;
+    font-weight: 600;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+    position: relative;
+    display: inline-block;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--turuncu), transparent);
+    border-radius: 2px;
+}
+
+/* ==========================================
+   HERO SECTION
+   ========================================== */
+.hero-title {
+    font-size: 4rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--turuncu) 0%, var(--turuncu-acik) 50%, #fff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    animation: glow 3s ease-in-out infinite;
+}
+
+@keyframes glow {
+    0%, 100% {
+        filter: drop-shadow(0 0 20px var(--turuncu-glow));
+    }
+    50% {
+        filter: drop-shadow(0 0 40px var(--turuncu-glow));
+    }
+}
+
+.hero-subtitle {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.25rem;
+    font-weight: 300;
+}
+
+/* ==========================================
+   FEATURE CARDS
+   ========================================== */
+.feature-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.4s ease;
+    height: 100%;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    border-color: var(--turuncu);
+    box-shadow: 0 20px 40px rgba(249, 115, 22, 0.2);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+    animation: bounce 2s ease-in-out infinite;
+}
+
+.feature-card:hover .feature-icon {
+    animation: bounce 0.5s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.feature-title {
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.feature-text {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.95rem;
+}
+
+/* ==========================================
+   FOOTER - GLASS STYLE
+   ========================================== */
+.footer-glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2rem 0;
+    margin-top: 4rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* ==========================================
+   UTILITIES
+   ========================================== */
+.text-turuncu {
+    color: var(--turuncu) !important;
+}
+
+.bg-turuncu {
+    background-color: var(--turuncu) !important;
+}
+
+.text-muted {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.border-top {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Links */
+a {
+    color: var(--turuncu-acik);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+a:hover {
     color: var(--turuncu);
-    border-bottom: 2px solid var(--turuncu);
-    padding-bottom: 10px;
-    margin-bottom: 20px;
+    text-decoration: none;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--turuncu);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--turuncu-koyu);
+}
+
+/* ==========================================
+   ANIMATIONS
+   ========================================== */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-up {
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .feature-card {
+        margin-bottom: 1.5rem;
+    }
+
+    .glass-card {
+        margin-bottom: 1rem;
+    }
+
+    body::before,
+    body::after {
+        width: 300px;
+        height: 300px;
+    }
+}
+
+/* ==========================================
+   PAGE TRANSITIONS
+   ========================================== */
+.page-enter {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.4s ease;
+}
+
+/* User info styling */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.user-info:hover {
+    background: rgba(249, 115, 22, 0.3);
+    color: #ffffff;
+    transform: translateY(-2px);
 }

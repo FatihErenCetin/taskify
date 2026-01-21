@@ -343,3 +343,71 @@ class StatsService:
     def is_ai_available() -> bool:
         """Check if AI features are available."""
         return is_ai_available()
+
+    @staticmethod
+    def get_timeline_data(user_id: int, past_days: int = 14, future_days: int = 7) -> List[Dict[str, Any]]:
+        """
+        Get daily timeline data for task events (created and deadlines only).
+
+        Args:
+            user_id: User ID
+            past_days: Number of days to look back
+            future_days: Number of days to look ahead
+
+        Returns:
+            List of daily events for timeline visualization
+        """
+        today = datetime.utcnow().date()
+        start_date = today - timedelta(days=past_days)
+        end_date = today + timedelta(days=future_days)
+
+        # Get all relevant tasks
+        tasks = Task.query.filter_by(user_id=user_id).all()
+
+        # Build daily event map
+        daily_events = {}
+
+        # Initialize all days
+        current = start_date
+        while current <= end_date:
+            daily_events[current.isoformat()] = {
+                'date': current.isoformat(),
+                'created': [],
+                'deadlines': []
+            }
+            current += timedelta(days=1)
+
+        for task in tasks:
+            # Created events (only for incomplete tasks)
+            if task.created_at and not task.is_completed:
+                created_date = task.created_at.date().isoformat()
+                if created_date in daily_events:
+                    daily_events[created_date]['created'].append({
+                        'id': task.id,
+                        'title': task.title,
+                        'category': task.category
+                    })
+
+            # Deadline events (only for incomplete tasks)
+            if task.deadline and not task.is_completed:
+                deadline_date = task.deadline.date().isoformat()
+                if deadline_date in daily_events:
+                    daily_events[deadline_date]['deadlines'].append({
+                        'id': task.id,
+                        'title': task.title,
+                        'category': task.category,
+                        'is_overdue': task.deadline.date() < today
+                    })
+
+        # Convert to sorted list
+        result = []
+        for date_str in sorted(daily_events.keys()):
+            day_data = daily_events[date_str]
+            # Only include days with events or today
+            if (day_data['created'] or day_data['deadlines'] or
+                date_str == today.isoformat()):
+                day_data['is_today'] = (date_str == today.isoformat())
+                day_data['is_past'] = (date_str < today.isoformat())
+                result.append(day_data)
+
+        return result

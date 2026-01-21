@@ -57,33 +57,32 @@
             </div>
         </div>
 
-        <!-- Kategori Dagilimi -->
+        <!-- Kategori Dagilimi - Pasta Grafigi -->
         <div class="glass-card p-4 mb-4 fade-in" style="animation-delay: 0.5s;">
             <h5 class="mb-4">
                 <i class="bi bi-pie-chart text-turuncu me-2"></i>Kategori Dagilimi
             </h5>
             {% if category_breakdown %}
-                {% for cat in category_breakdown %}
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-1">
-                        <span>
-                            <span class="badge category-{{ cat.category|lower }} me-2">{{ cat.category }}</span>
-                        </span>
-                        <span class="text-muted small">
-                            {{ cat.completed }}/{{ cat.total }} (%{{ cat.completion_rate }})
-                        </span>
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <canvas id="categoryPieChart" style="max-height: 250px;"></canvas>
                     </div>
-                    <div class="progress" style="height: 8px; background: rgba(255,255,255,0.1);">
-                        <div class="progress-bar"
-                             role="progressbar"
-                             style="width: {{ cat.completion_rate }}%; background: var(--turuncu);"
-                             aria-valuenow="{{ cat.completion_rate }}"
-                             aria-valuemin="0"
-                             aria-valuemax="100">
+                    <div class="col-md-6">
+                        <div class="category-legend">
+                            {% for cat in category_breakdown %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>
+                                    <span class="legend-color" style="background: var(--chart-color-{{ loop.index0 % 6 }});"></span>
+                                    <span class="badge category-{{ cat.category|lower }} ms-1">{{ cat.category }}</span>
+                                </span>
+                                <span class="text-muted small">
+                                    {{ cat.total }} gorev (%{{ cat.completion_rate }} tamamlandi)
+                                </span>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
-                {% endfor %}
             {% else %}
                 <p class="text-muted text-center mb-0">
                     <i class="bi bi-inbox me-2"></i>Henuz gorev eklenmemis.
@@ -311,5 +310,80 @@
         border-radius: 50%;
         margin-right: 6px;
     }
+
+    /* Pasta grafik renkleri */
+    :root {
+        --chart-color-0: #FF6B35;
+        --chart-color-1: #4ECDC4;
+        --chart-color-2: #45B7D1;
+        --chart-color-3: #96CEB4;
+        --chart-color-4: #FFEAA7;
+        --chart-color-5: #DDA0DD;
+    }
+
+    .legend-color {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        margin-right: 6px;
+    }
+
+    .category-legend {
+        padding: 10px 0;
+    }
 </style>
+
+{% endblock %}
+
+{% block scripts %}
+{% if category_breakdown %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('categoryPieChart');
+    if (ctx) {
+        const chartColors = [
+            '#FF6B35',
+            '#4ECDC4',
+            '#45B7D1',
+            '#96CEB4',
+            '#FFEAA7',
+            '#DDA0DD'
+        ];
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: [{% for cat in category_breakdown %}'{{ cat.category }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    data: [{% for cat in category_breakdown %}{{ cat.total }}{% if not loop.last %}, {% endif %}{% endfor %}],
+                    backgroundColor: chartColors.slice(0, {{ category_breakdown|length }}),
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.raw / total) * 100).toFixed(1);
+                                return context.label + ': ' + context.raw + ' gorev (' + percentage + '%)';
+                            }
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+    }
+});
+</script>
+{% endif %}
 {% endblock %}

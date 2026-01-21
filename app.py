@@ -517,21 +517,23 @@ def stats():
     badge = StatsService.get_performance_badge(current_user.id, get_locale())
     category_breakdown = StatsService.get_category_breakdown(current_user.id)
     weekly_progress = StatsService.get_weekly_progress(current_user.id)
+    timeline_data = StatsService.get_timeline_data(current_user.id)
     upcoming = StatsService.get_upcoming_deadlines(current_user.id)
-    
+
     # Get AI comment
     ai_comment = StatsService.get_ai_comment(
-        current_user.id, 
+        current_user.id,
         get_locale(),
         use_ai=current_user.ai_features_enabled
     )
-    
+
     return render_template(
         'stats.html',
         stats=user_stats,
         badge=badge,
         category_breakdown=category_breakdown,
         weekly_progress=weekly_progress,
+        timeline_data=timeline_data,
         upcoming_tasks=upcoming,
         ai_comment=ai_comment,
         ai_available=StatsService.is_ai_available()

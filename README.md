@@ -289,9 +289,6 @@ flake8 .
 
 ---
 
-## Lisans
-
-MIT License
 
 ## Katkida Bulunma
 
@@ -300,7 +297,3 @@ MIT License
 3. Degisikliklerinizi commit edin (`git commit -m 'Yeni ozellik eklendi'`)
 4. Branch'i push edin (`git push origin feature/yeni-ozellik`)
 5. Pull Request acin
-
----
-
-**Gelistirici:** Fatih Erencetin

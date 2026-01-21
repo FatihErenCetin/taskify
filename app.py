@@ -234,33 +234,69 @@ def logout():
 @app.route('/tasks')
 @login_required
 def tasks():
-    """Task list page."""
-    # Active tasks
-    active_tasks = Task.query.filter_by(
-        user_id=current_user.id,
-        is_completed=False
-    ).all()
-    
-    # Sort by priority and deadline
+    """Task list page with optional group filter."""
+    # Get filter parameter
+    group_id = request.args.get('group_id', type=int)
+
+    # Get groups user administers (for dropdown)
+    administered_groups = Group.query.filter_by(admin_id=current_user.id).all()
+
+    # Determine view mode
+    selected_group = None
+    is_group_view = False
+
+    if group_id:
+        # Validate user is admin of this group
+        selected_group = Group.query.filter_by(id=group_id, admin_id=current_user.id).first()
+        if selected_group:
+            is_group_view = True
+
+    if is_group_view and selected_group:
+        # GROUP VIEW: Tasks assigned BY current_user TO group members
+        member_ids = [m.id for m in selected_group.members]
+
+        # Active tasks assigned to group members by current user
+        active_tasks = Task.query.filter(
+            Task.user_id.in_(member_ids),
+            Task.assigned_by_id == current_user.id,
+            Task.is_completed == False
+        ).all()
+
+        # Completed tasks assigned to group members by current user
+        completed_tasks = Task.query.filter(
+            Task.user_id.in_(member_ids),
+            Task.assigned_by_id == current_user.id,
+            Task.is_completed == True
+        ).order_by(Task.completed_at.desc()).limit(20).all()
+    else:
+        # SELF VIEW: Current user's own tasks (existing behavior)
+        active_tasks = Task.query.filter_by(
+            user_id=current_user.id,
+            is_completed=False
+        ).all()
+
+        completed_tasks = Task.query.filter_by(
+            user_id=current_user.id,
+            is_completed=True
+        ).order_by(Task.completed_at.desc()).limit(10).all()
+
+    # Sort active tasks by priority and deadline
     active_tasks_sorted = sorted(
         active_tasks,
         key=lambda t: (t.priority, t.deadline or datetime.max)
     )
-    
-    # Completed tasks
-    completed_tasks = Task.query.filter_by(
-        user_id=current_user.id,
-        is_completed=True
-    ).order_by(Task.completed_at.desc()).limit(10).all()
-    
+
     # Get deadline alerts
     for task in active_tasks_sorted:
         task.alert = NLPService.get_task_alert(task.deadline)
-    
+
     return render_template(
         'tasks.html',
         active_tasks=active_tasks_sorted,
-        completed_tasks=completed_tasks
+        completed_tasks=completed_tasks,
+        administered_groups=administered_groups,
+        selected_group=selected_group,
+        is_group_view=is_group_view
     )
 
 
@@ -442,6 +478,11 @@ def delete_task(task_id):
     db.session.commit()
 
     flash(_('task_deleted'), 'info')
+
+    # Preserve group_id if coming from group view
+    group_id = request.args.get('group_id', type=int)
+    if group_id:
+        return redirect(url_for('tasks', group_id=group_id))
     return redirect(url_for('tasks'))
 
 

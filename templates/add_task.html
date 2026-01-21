@@ -13,6 +13,7 @@
             </div>
             <div class="card-body p-4">
                 <form method="POST" action="/tasks/add">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <!-- Gorev Basligi -->
                     <div class="mb-4">
                         <label for="title" class="form-label">

@@ -10,8 +10,42 @@ document.addEventListener('DOMContentLoaded', function() {
     initTableRowEffects();
     initTooltips();
     initAlertDismiss();
+    initCSRFProtection();
     // initParallaxEffect(); // Mouse hareket efekti devre disi
 });
+
+/* ==========================================
+   CSRF PROTECTION FOR AJAX REQUESTS
+   ========================================== */
+function initCSRFProtection() {
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    if (csrfToken) {
+        // Add CSRF token to all AJAX requests
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options = {}) {
+            // Only add to same-origin requests
+            if (!url.startsWith('http') || url.startsWith(window.location.origin)) {
+                options.headers = {
+                    ...options.headers,
+                    'X-CSRFToken': csrfToken
+                };
+            }
+            return originalFetch(url, options);
+        };
+        
+        // Also set up for XMLHttpRequest
+        const originalXHROpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function(method, url) {
+            const result = originalXHROpen.apply(this, arguments);
+            if (!url.startsWith('http') || url.startsWith(window.location.origin)) {
+                this.setRequestHeader('X-CSRFToken', csrfToken);
+            }
+            return result;
+        };
+    }
+}
 
 /* ==========================================
    PAGE LOAD ANIMATIONS

@@ -13,6 +13,9 @@ SQLAlchemy==2.0.23
 # === Authentication ===
 Flask-Login==0.6.3
 
+# === Security ===
+Flask-WTF==1.2.1
+
 # === Internationalization ===
 Flask-Babel==4.0.0
 Babel==2.14.0

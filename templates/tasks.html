@@ -184,13 +184,21 @@ function filterTasks(groupId) {
                             </small>
                         </td>
                         <td>
-                            <a href="/tasks/{{ task.id }}/delete?group_id={{ selected_group.id }}"
-                               class="btn btn-sm btn-outline-danger"
-                               onclick="return confirm('Bu gorevi silmek istediginize emin misiniz?')"
-                               data-bs-toggle="tooltip"
-                               title="Sil">
-                                <i class="bi bi-trash"></i>
-                            </a>
+                            <div class="btn-group" role="group">
+                                <a href="/tasks/{{ task.id }}/edit"
+                                   class="btn btn-sm btn-outline-warning"
+                                   data-bs-toggle="tooltip"
+                                   title="Duzenle">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="/tasks/{{ task.id }}/delete?group_id={{ selected_group.id }}"
+                                   class="btn btn-sm btn-outline-danger"
+                                   onclick="return confirm('Bu gorevi silmek istediginize emin misiniz?')"
+                                   data-bs-toggle="tooltip"
+                                   title="Sil">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -434,6 +442,12 @@ function filterTasks(groupId) {
                                     <i class="bi bi-check-lg"></i>
                                 </a>
                                 {% if task.assigned_by_id == current_user.id %}
+                                <a href="/tasks/{{ task.id }}/edit"
+                                   class="btn btn-sm btn-outline-warning"
+                                   data-bs-toggle="tooltip"
+                                   title="Duzenle">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
                                 <a href="/tasks/{{ task.id }}/delete"
                                    class="btn btn-sm btn-outline-danger"
                                    onclick="return confirm('Bu gorevi silmek istediginize emin misiniz?')"

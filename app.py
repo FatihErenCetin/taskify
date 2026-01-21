@@ -8,6 +8,7 @@ Flask-based task management with NLP categorization and multi-language support.
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_babel import Babel, _
+from flask_wtf.csrf import CSRFProtect
 from datetime import datetime
 
 from config import get_config
@@ -71,6 +72,9 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message_category = 'warning'
+
+# Initialize CSRF protection
+csrf = CSRFProtect(app)
 
 #babel.init_app(app)
 
@@ -427,20 +431,66 @@ def edit_task(task_id):
     """Edit existing task."""
     task = Task.query.get_or_404(task_id)
     
-    if task.user_id != current_user.id:
+    # Sadece görevi atayan kişi düzenleyebilir
+    if task.assigned_by_id != current_user.id:
         flash(_('access_denied'), 'danger')
         return redirect(url_for('tasks'))
     
     if request.method == 'POST':
-        task.title = request.form['title']
-        task.description = request.form.get('description', '')
-        task.priority = int(request.form.get('priority', 2))
-        task.category = request.form.get('category', 'General')
+        title = request.form['title']
+        description = request.form.get('description', '')
+        selected_priority = request.form.get('priority', '0')
+        selected_category = request.form.get('category', 'auto')
+        analysis_mode = request.form.get('analysis_mode', 'manual')
         
-        # Update source to manual since user edited
-        task.category_source = 'manual'
-        task.priority_source = 'manual'
+        # Varsayılan değerler (mevcut değerler)
+        category = task.category
+        priority = task.priority
+        category_source = task.category_source
+        priority_source = task.priority_source
         
+        # Analiz moduna göre işlem yap
+        if analysis_mode == 'manual':
+            # Manuel mod - form değerlerini doğrudan kullan
+            category = selected_category if selected_category != 'auto' else task.category
+            priority = int(selected_priority) if selected_priority != '0' else task.priority
+            category_source = 'manual'
+            priority_source = 'manual'
+        elif analysis_mode in ('rule', 'ai'):
+            # Yeniden analiz modu
+            use_ai = (analysis_mode == 'ai')
+            
+            analysis = NLPService.analyze_task(
+                title,
+                description,
+                use_ai=use_ai
+            )
+            
+            # Kategori: Otomatik mi elle mi seçilmiş?
+            if selected_category == 'auto':
+                category = analysis['category']
+                category_source = analysis['category_source']
+            else:
+                category = selected_category
+                category_source = 'manual'
+            
+            # Öncelik: Otomatik mi elle mi seçilmiş?
+            if selected_priority == '0':
+                priority = analysis['priority']
+                priority_source = analysis['priority_source']
+            else:
+                priority = int(selected_priority)
+                priority_source = 'manual'
+        
+        # Görev alanlarını güncelle
+        task.title = title
+        task.description = description
+        task.category = category
+        task.priority = priority
+        task.category_source = category_source
+        task.priority_source = priority_source
+        
+        # Deadline
         deadline_str = request.form.get('deadline', '')
         if deadline_str:
             try:
@@ -745,21 +795,125 @@ def profile():
 @login_required
 def settings():
     """User settings page."""
-    if request.method == 'POST':
-        # Update language preference
-        language = request.form.get('language')
-        if language in app.config['BABEL_SUPPORTED_LOCALES']:
-            current_user.preferred_language = language
-            session['language'] = language
-        
-        # Update AI preference
-        current_user.ai_features_enabled = request.form.get('ai_enabled') == 'on'
-        
-        db.session.commit()
-        flash(_('settings_saved'), 'success')
+    return render_template('settings.html')
+
+
+@app.route('/settings/profile', methods=['POST'])
+@login_required
+def settings_profile():
+    """Update user profile."""
+    username = request.form.get('username', '').strip()
+    email = request.form.get('email', '').strip()
+    
+    # Validation
+    if not username or not email:
+        flash('Kullanici adi ve e-posta zorunludur.', 'danger')
         return redirect(url_for('settings'))
     
-    return render_template('settings.html')
+    # Check if username is taken (by another user)
+    existing_user = User.query.filter_by(username=username).first()
+    if existing_user and existing_user.id != current_user.id:
+        flash('Bu kullanici adi zaten kullaniliyor.', 'danger')
+        return redirect(url_for('settings'))
+    
+    # Check if email is taken (by another user)
+    existing_email = User.query.filter_by(email=email).first()
+    if existing_email and existing_email.id != current_user.id:
+        flash('Bu e-posta adresi zaten kullaniliyor.', 'danger')
+        return redirect(url_for('settings'))
+    
+    # Update user
+    current_user.username = username
+    current_user.email = email
+    db.session.commit()
+    
+    flash('Profil bilgileri guncellendi.', 'success')
+    return redirect(url_for('settings'))
+
+
+@app.route('/settings/password', methods=['POST'])
+@login_required
+def settings_password():
+    """Change user password."""
+    current_password = request.form.get('current_password', '')
+    new_password = request.form.get('new_password', '')
+    new_password_confirm = request.form.get('new_password_confirm', '')
+    
+    # Verify current password
+    if not current_user.check_password(current_password):
+        flash('Mevcut sifre yanlis.', 'danger')
+        return redirect(url_for('settings'))
+    
+    # Check new passwords match
+    if new_password != new_password_confirm:
+        flash('Yeni sifreler eslesiyor.', 'danger')
+        return redirect(url_for('settings'))
+    
+    # Check password length
+    if len(new_password) < 6:
+        flash('Sifre en az 6 karakter olmalidir.', 'danger')
+        return redirect(url_for('settings'))
+    
+    # Update password
+    current_user.set_password(new_password)
+    db.session.commit()
+    
+    flash('Sifre basariyla degistirildi.', 'success')
+    return redirect(url_for('settings'))
+
+
+@app.route('/settings/preferences', methods=['POST'])
+@login_required
+def settings_preferences():
+    """Update user preferences."""
+    # Update language preference
+    language = request.form.get('language')
+    if language in app.config['BABEL_SUPPORTED_LOCALES']:
+        current_user.preferred_language = language
+        session['language'] = language
+    
+    # Update AI preference
+    current_user.ai_features_enabled = request.form.get('ai_enabled') == 'on'
+    
+    db.session.commit()
+    flash('Tercihler kaydedildi.', 'success')
+    return redirect(url_for('settings'))
+
+
+@app.route('/settings/clear-tasks')
+@login_required
+def settings_clear_tasks():
+    """Delete all user's tasks."""
+    # Delete tasks where user is the owner
+    Task.query.filter_by(user_id=current_user.id).delete()
+    # Delete tasks user assigned to others
+    Task.query.filter_by(assigned_by_id=current_user.id).delete()
+    db.session.commit()
+    
+    flash('Tum gorevler silindi.', 'warning')
+    return redirect(url_for('settings'))
+
+
+@app.route('/settings/delete-account')
+@login_required
+def settings_delete_account():
+    """Delete user account and all data."""
+    user_id = current_user.id
+    
+    # Delete user's tasks
+    Task.query.filter_by(user_id=user_id).delete()
+    Task.query.filter_by(assigned_by_id=user_id).delete()
+    
+    # Delete user's groups
+    Group.query.filter_by(admin_id=user_id).delete()
+    
+    # Logout and delete user
+    logout_user()
+    User.query.filter_by(id=user_id).delete()
+    db.session.commit()
+    
+    flash('Hesabiniz basariyla silindi.', 'info')
+    return redirect(url_for('home'))
 
 
 # ============================================================

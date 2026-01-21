@@ -13,6 +13,7 @@
             </div>
             <div class="card-body p-4">
                 <form method="POST" action="/groups/{{ group.id }}/edit">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <!-- Grup Adi -->
                     <div class="mb-4">
                         <label for="name" class="form-label">

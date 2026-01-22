@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Ana Sayfa{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="text-center py-5 mb-5">
+    <h1 class="hero-title mb-3">
+        <i class="bi bi-bullseye"></i> Taskify
+    </h1>
+    <p class="hero-subtitle mb-4">
+        Akilli Gorev Yoneticisi - NLP ile otomatik kategorilendirme
+    </p>
+
+    <div class="d-flex justify-content-center gap-3 mt-4">
+        {% if current_user.is_authenticated %}
+            <a href="/tasks" class="btn btn-turuncu btn-lg">
+                <i class="bi bi-list-task me-2"></i>Gorevlerime Git
+            </a>
+            <a href="/tasks/add" class="btn btn-outline-turuncu btn-lg">
+                <i class="bi bi-plus-circle me-2"></i>Yeni Gorev
+            </a>
+        {% else %}
+            <a href="/register" class="btn btn-turuncu btn-lg">
+                <i class="bi bi-rocket-takeoff me-2"></i>Hemen Basla
+            </a>
+            <a href="/login" class="btn btn-outline-turuncu btn-lg">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Giris Yap
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="feature-card slide-up">
+            <span class="feature-icon">
+                <i class="bi bi-list-check text-turuncu"></i>
+            </span>
+            <h5 class="feature-title">Gorevleri Yonet</h5>
+            <p class="feature-text">
+                Gorevlerini kolayca ekle, duzenle ve tamamla.
+                Tum islerini tek bir yerden kontrol et.
+            </p>
+            <a href="/tasks" class="btn btn-turuncu mt-3">
+                <i class="bi bi-arrow-right me-1"></i>Gorevlere Git
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="feature-card slide-up" style="animation-delay: 0.1s;">
+            <span class="feature-icon">
+                <i class="bi bi-robot text-turuncu"></i>
+            </span>
+            <h5 class="feature-title">Akilli NLP</h5>
+            <p class="feature-text">
+                Yapay zeka ile gorevlerin otomatik kategorilenir.
+                Sadece yazman yeterli, gerisini biz hallederiz.
+            </p>
+            <a href="/tasks/add" class="btn btn-turuncu mt-3">
+                <i class="bi bi-plus me-1"></i>Gorev Ekle
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="feature-card slide-up" style="animation-delay: 0.2s;">
+            <span class="feature-icon">
+                <i class="bi bi-lightning-charge text-turuncu"></i>
+            </span>
+            <h5 class="feature-title">Onceliklendirme</h5>
+            <p class="feature-text">
+                Acil isler otomatik one cikar. Puanlama sistemi
+                ile en onemli gorevlerine odaklan.
+            </p>
+            <a href="/tasks" class="btn btn-outline-turuncu mt-3">
+                <i class="bi bi-eye me-1"></i>Goruntule
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="row g-4 mb-5">
+    <div class="col-12">
+        <div class="glass-card p-4">
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <div class="p-3">
+                        <i class="bi bi-check2-all text-turuncu" style="font-size: 2.5rem;"></i>
+                        <h3 class="mt-2 mb-0" data-counter="100">0</h3>
+                        <p class="text-muted mb-0">Tamamlanan Gorev</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3">
+                        <i class="bi bi-people text-turuncu" style="font-size: 2.5rem;"></i>
+                        <h3 class="mt-2 mb-0" data-counter="50">0</h3>
+                        <p class="text-muted mb-0">Aktif Kullanici</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3">
+                        <i class="bi bi-graph-up-arrow text-turuncu" style="font-size: 2.5rem;"></i>
+                        <h3 class="mt-2 mb-0" data-counter="95">0</h3>
+                        <p class="text-muted mb-0">% Verimlilik</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<div class="mb-5">
+    <h2 class="section-title text-center d-block mb-5">
+        <i class="bi bi-gear me-2"></i>Nasil Calisiyor?
+    </h2>
+
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="glass-card p-4 text-center h-100">
+                <div class="rounded-circle bg-turuncu d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width: 60px; height: 60px;">
+                    <span class="text-white fw-bold fs-4">1</span>
+                </div>
+                <h6 class="mb-2">Gorev Yaz</h6>
+                <p class="text-muted small mb-0">Gorevini dogal dilde yaz</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-4 text-center h-100">
+                <div class="rounded-circle bg-turuncu d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width: 60px; height: 60px;">
+                    <span class="text-white fw-bold fs-4">2</span>
+                </div>
+                <h6 class="mb-2">NLP Analiz</h6>
+                <p class="text-muted small mb-0">Yapay zeka metni analiz eder</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-4 text-center h-100">
+                <div class="rounded-circle bg-turuncu d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width: 60px; height: 60px;">
+                    <span class="text-white fw-bold fs-4">3</span>
+                </div>
+                <h6 class="mb-2">Kategorize</h6>
+                <p class="text-muted small mb-0">Otomatik kategori ve oncelik</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-4 text-center h-100">
+                <div class="rounded-circle bg-turuncu d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width: 60px; height: 60px;">
+                    <span class="text-white fw-bold fs-4">4</span>
+                </div>
+                <h6 class="mb-2">Tamamla</h6>
+                <p class="text-muted small mb-0">Gorevlerini sirala ve tamamla</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

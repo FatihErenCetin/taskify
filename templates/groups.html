@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Gruplar{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0">
+                <i class="bi bi-people text-turuncu me-2"></i>Gruplarim
+            </h3>
+            <a href="/groups/create" class="btn btn-turuncu">
+                <i class="bi bi-plus-circle me-2"></i>Yeni Grup Olustur
+            </a>
+        </div>
+
+        <!-- Admin Oldugum Gruplar -->
+        {% if administered_groups %}
+        <div class="glass-card p-4 mb-4 fade-in">
+            <h5 class="mb-4">
+                <i class="bi bi-shield-check text-turuncu me-2"></i>Yonettigim Gruplar
+            </h5>
+            <div class="row">
+                {% for group in administered_groups %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card bg-dark border-0 h-100" style="background: rgba(255,255,255,0.05);">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-people-fill text-turuncu me-1"></i>
+                                    {{ group.name }}
+                                </h6>
+                                <span class="badge bg-turuncu">Admin</span>
+                            </div>
+                            {% if group.description %}
+                            <p class="card-text small text-muted mb-2">{{ group.description[:50] }}{% if group.description|length > 50 %}...{% endif %}</p>
+                            {% endif %}
+                            <p class="card-text small">
+                                <i class="bi bi-person me-1"></i>{{ group.members.count() }} uye
+                            </p>
+                            <div class="d-flex gap-2">
+                                <a href="/groups/{{ group.id }}" class="btn btn-sm btn-glass">
+                                    <i class="bi bi-eye me-1"></i>Goruntule
+                                </a>
+                                <a href="/groups/{{ group.id }}/edit" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil me-1"></i>Duzenle
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Uye Oldugum Gruplar -->
+        {% if member_groups %}
+        <div class="glass-card p-4 mb-4 fade-in" style="animation-delay: 0.2s;">
+            <h5 class="mb-4">
+                <i class="bi bi-person-badge text-turuncu me-2"></i>Uye Oldugum Gruplar
+            </h5>
+            <div class="row">
+                {% for group in member_groups %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card bg-dark border-0 h-100" style="background: rgba(255,255,255,0.05);">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-people-fill text-turuncu me-1"></i>
+                                    {{ group.name }}
+                                </h6>
+                                <span class="badge bg-secondary">Uye</span>
+                            </div>
+                            {% if group.description %}
+                            <p class="card-text small text-muted mb-2">{{ group.description[:50] }}{% if group.description|length > 50 %}...{% endif %}</p>
+                            {% endif %}
+                            <p class="card-text small">
+                                <i class="bi bi-person-circle me-1"></i>Admin: {{ group.admin.username }}
+                            </p>
+                            <a href="/groups/{{ group.id }}" class="btn btn-sm btn-glass">
+                                <i class="bi bi-eye me-1"></i>Goruntule
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Hic grup yoksa -->
+        {% if not administered_groups and not member_groups %}
+        <div class="glass-card p-5 text-center fade-in">
+            <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+            <h5 class="mt-3 mb-2">Henuz Grubunuz Yok</h5>
+            <p class="text-muted mb-4">Bir grup olusturarak diger kullanicilara gorev atayabilirsiniz.</p>
+            <a href="/groups/create" class="btn btn-turuncu">
+                <i class="bi bi-plus-circle me-2"></i>Ilk Grubunuzu Olusturun
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

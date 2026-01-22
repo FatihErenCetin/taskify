@@ -1,77 +1,263 @@
 {% extends 'base.html' %}
 
-{% block title %}Yeni Görev Ekle{% endblock %}
+{% block title %}Yeni Gorev Ekle{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
+    <div class="col-lg-8 col-md-10">
+        <div class="card glass-card fade-in">
             <div class="card-header card-header-turuncu">
-                <h4 class="mb-0">➕ Yeni Görev Ekle</h4>
+                <h4 class="mb-0">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Yeni Gorev Ekle
+                </h4>
             </div>
-            <div class="card-body">
-                <form method="POST" action="/add">
-                    <div class="mb-3">
-                        <label for="baslik" class="form-label"><strong>Görev Başlığı:</strong></label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="baslik" 
-                               name="baslik" 
-                               placeholder="Örn: Yarın acil toplantıya katıl"
+            <div class="card-body p-4">
+                <form method="POST" action="/tasks/add">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <!-- Gorev Basligi -->
+                    <div class="mb-4">
+                        <label for="title" class="form-label">
+                            <i class="bi bi-card-heading me-1"></i>
+                            <strong>Gorev Basligi</strong>
+                        </label>
+                        <input type="text"
+                               class="form-control form-control-glass"
+                               id="title"
+                               name="title"
+                               placeholder="Orn: Yarin acil toplantiya katil"
                                required>
-                        <div class="form-text">NLP otomatik olarak kategori ve öncelik belirleyecek.</div>
+                        <div class="form-text">
+                            <i class="bi bi-robot me-1"></i>
+                            NLP otomatik olarak kategori ve oncelik belirleyecek.
+                        </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="aciklama" class="form-label"><strong>Açıklama (opsiyonel):</strong></label>
-                        <textarea class="form-control" 
-                                  id="aciklama" 
-                                  name="aciklama" 
+
+                    <!-- Aciklama -->
+                    <div class="mb-4">
+                        <label for="description" class="form-label">
+                            <i class="bi bi-text-paragraph me-1"></i>
+                            <strong>Aciklama</strong>
+                            <small class="text-muted">(opsiyonel)</small>
+                        </label>
+                        <textarea class="form-control form-control-glass"
+                                  id="description"
+                                  name="description"
                                   rows="3"
-                                  placeholder="Görev detayları..."></textarea>
+                                  placeholder="Gorev detaylari..."></textarea>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="oncelik" class="form-label"><strong>Öncelik:</strong></label>
-                        <select class="form-select" id="oncelik" name="oncelik">
-                            <option value="0" selected>🤖 Otomatik (NLP belirlesin)</option>
-                            <option value="1">🔴 Yüksek</option>
-                            <option value="2">🟡 Normal</option>
-                            <option value="3">🟢 Düşük</option>
+                    <!-- Analiz Modu -->
+                    <div class="mb-4">
+                        <label for="analysis_mode" class="form-label">
+                            <i class="bi bi-cpu me-1"></i>
+                            <strong>Otomatik Belirleme Yontemi</strong>
+                        </label>
+                        <select class="form-select form-select-glass" id="analysis_mode" name="analysis_mode" onchange="updateAnalysisHints()">
+                            <option value="manual">Manuel (Kendim secerim)</option>
+                            <option value="rule" selected>Basit Kural Tabanli</option>
+                            <option value="ai">Gelismis NLP (Yapay Zeka)</option>
                         </select>
-                        <div class="form-text">Seçmezseniz NLP metne göre otomatik belirler.</div>
+                        <div class="form-text" id="analysis_hint">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <span id="analysis_hint_text">Anahtar kelime eslestirmesi ile kategori ve oncelik belirlenir.</span>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="kategori" class="form-label"><strong>Kategori:</strong></label>
-                            <select class="form-select" id="kategori" name="kategori">
-                                <option value="NLP" selected>🤖 Otomatik (NLP belirlesin)</option>
-                                <option value="İş">💼 İş</option>
-                                <option value="Kişisel">👤 Kişisel</option>
-                                <option value="Sağlık">🏥 Sağlık</option>
-                                <option value="Eğitim">📚 Eğitim</option>
-                                <option value="Finans">💰 Finans</option>
-                                <option value="Genel">📌 Genel</option>
+                    <div class="row">
+                        <!-- Oncelik -->
+                        <div class="col-md-6 mb-4">
+                            <label for="priority" class="form-label">
+                                <i class="bi bi-flag me-1"></i>
+                                <strong>Oncelik</strong>
+                            </label>
+                            <select class="form-select form-select-glass" id="priority" name="priority">
+                                <option value="0" selected>Otomatik</option>
+                                <option value="1">Yuksek</option>
+                                <option value="2">Normal</option>
+                                <option value="3">Dusuk</option>
                             </select>
-                        <div class="form-text">Seçmezseniz NLP metne göre otomatik belirler.</div>
-                    </div>
-                    
-                    <div class="col-md-4 mb-3">
-                            <label for="son_tarih" class="form-label"><strong>Son Tarih:</strong></label>
-                            <input type="date" 
-                                   class="form-control" 
-                                   id="son_tarih" 
-                                   name="son_tarih">
-                            <div class="form-text">Opsiyonel</div>
+                            <div class="form-text priority-hint">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Otomatik secilirse analiz yontemine gore belirlenir.
+                            </div>
+                        </div>
+
+                        <!-- Kategori -->
+                        <div class="col-md-6 mb-4">
+                            <label for="category" class="form-label">
+                                <i class="bi bi-tag me-1"></i>
+                                <strong>Kategori</strong>
+                            </label>
+                            <select class="form-select form-select-glass" id="category" name="category">
+                                <option value="auto" selected>Otomatik</option>
+                                <option value="Work">Is</option>
+                                <option value="Personal">Kisisel</option>
+                                <option value="Health">Saglik</option>
+                                <option value="Education">Egitim</option>
+                                <option value="Finance">Finans</option>
+                                <option value="General">Genel</option>
+                            </select>
+                            <div class="form-text category-hint">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Otomatik secilirse analiz yontemine gore belirlenir.
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-turuncu">✅ Görevi Kaydet</button>
-                        <a href="/tasks" class="btn btn-secondary">İptal</a>
+                    <!-- Son Tarih -->
+                    <div class="mb-4">
+                        <label for="deadline" class="form-label">
+                            <i class="bi bi-calendar-event me-1"></i>
+                            <strong>Son Tarih</strong>
+                            <small class="text-muted">(opsiyonel)</small>
+                        </label>
+                        <input type="date"
+                               class="form-control form-control-glass"
+                               id="deadline"
+                               name="deadline"
+                               style="max-width: 250px;">
+                    </div>
+
+                    <!-- Gorev Atama (Grup Adminleri icin) -->
+                    {% if users %}
+                    <div class="mb-4">
+                        <label for="assign_to" class="form-label">
+                            <i class="bi bi-person-plus me-1"></i>
+                            <strong>Gorevi Ata</strong>
+                        </label>
+                        <select class="form-select form-select-glass" id="assign_to" name="assign_to">
+                            <option value="{{ current_user.id }}" selected>Kendime</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.username }} ({{ user.email }})</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Grup uyelerinize gorev atayabilirsiniz.
+                            {% if groups %}
+                            <span class="text-turuncu">({{ groups|length }} grup)</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Butonlar -->
+                    <div class="d-flex gap-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                        <button type="submit" class="btn btn-turuncu">
+                            <i class="bi bi-check-circle me-2"></i>Gorevi Kaydet
+                        </button>
+                        <a href="/tasks" class="btn btn-glass">
+                            <i class="bi bi-x-circle me-2"></i>Iptal
+                        </a>
                     </div>
                 </form>
             </div>
         </div>
+
+        <!-- Ipuclari - Kural Tabanli -->
+        <div class="glass-card p-4 mt-4 fade-in" id="hints-rule" style="animation-delay: 0.2s;">
+            <h5 class="mb-3">
+                <i class="bi bi-lightbulb text-turuncu me-2"></i>Kural Tabanli Analiz Ipuclari
+            </h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="small text-muted mb-2">
+                        <i class="bi bi-check text-success me-1"></i>
+                        "Acil", "hemen", "bugun" gibi kelimeler yuksek oncelik verir
+                    </p>
+                    <p class="small text-muted mb-2">
+                        <i class="bi bi-check text-success me-1"></i>
+                        "Toplanti", "rapor" kelimeleri Is kategorisine atar
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <p class="small text-muted mb-2">
+                        <i class="bi bi-check text-success me-1"></i>
+                        "Spor", "doktor" kelimeleri Saglik kategorisine atar
+                    </p>
+                    <p class="small text-muted mb-2">
+                        <i class="bi bi-check text-success me-1"></i>
+                        "Fatura", "odeme" kelimeleri Finans kategorisine atar
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ipuclari - Gelismis NLP -->
+        <div class="glass-card p-4 mt-4 fade-in" id="hints-ai" style="animation-delay: 0.2s; display: none;">
+            <h5 class="mb-3">
+                <i class="bi bi-robot text-turuncu me-2"></i>Gelismis NLP Analiz
+            </h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="small text-muted mb-2">
+                        <i class="bi bi-cpu text-info me-1"></i>
+                        Yapay zeka metni anlamsal olarak analiz eder
+                    </p>
+                    <p class="small text-muted mb-2">
+                        <i class="bi bi-translate text-info me-1"></i>
+                        Turkce ve Ingilizce destekler
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <p class="small text-muted mb-2">
+                        <i class="bi bi-diagram-3 text-info me-1"></i>
+                        Zero-shot siniflandirma modeli kullanilir
+                    </p>
+                    <p class="small text-muted mb-2">
+                        <i class="bi bi-clock-history text-warning me-1"></i>
+                        Ilk kullanımda model yuklenir (yavas olabilir)
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ipuclari - Manuel -->
+        <div class="glass-card p-4 mt-4 fade-in" id="hints-manual" style="animation-delay: 0.2s; display: none;">
+            <h5 class="mb-3">
+                <i class="bi bi-hand-index text-turuncu me-2"></i>Manuel Secim
+            </h5>
+            <p class="small text-muted mb-0">
+                <i class="bi bi-info-circle me-1"></i>
+                Kategori ve onceligi kendiniz secin. Otomatik belirleme devre disi.
+            </p>
+        </div>
     </div>
 </div>
+
+<script>
+function updateAnalysisHints() {
+    const mode = document.getElementById('analysis_mode').value;
+    const hintText = document.getElementById('analysis_hint_text');
+    const prioritySelect = document.getElementById('priority');
+    const categorySelect = document.getElementById('category');
+
+    // Ipucu kartlarini gizle/goster
+    document.getElementById('hints-rule').style.display = mode === 'rule' ? 'block' : 'none';
+    document.getElementById('hints-ai').style.display = mode === 'ai' ? 'block' : 'none';
+    document.getElementById('hints-manual').style.display = mode === 'manual' ? 'block' : 'none';
+
+    // Analiz modu aciklamasini guncelle
+    if (mode === 'manual') {
+        hintText.textContent = 'Kategori ve onceligi manuel olarak secmeniz gerekiyor.';
+        // Manuel modda Otomatik seceneklerini devre disi birak
+        prioritySelect.querySelector('option[value="0"]').disabled = true;
+        categorySelect.querySelector('option[value="auto"]').disabled = true;
+        // Eger Otomatik secili ise varsayilana cevir
+        if (prioritySelect.value === '0') prioritySelect.value = '2';
+        if (categorySelect.value === 'auto') categorySelect.value = 'General';
+    } else if (mode === 'rule') {
+        hintText.textContent = 'Anahtar kelime eslestirmesi ile kategori ve oncelik belirlenir. Hizli ve basit.';
+        prioritySelect.querySelector('option[value="0"]').disabled = false;
+        categorySelect.querySelector('option[value="auto"]').disabled = false;
+    } else if (mode === 'ai') {
+        hintText.textContent = 'Yapay zeka ile gelismis metin analizi yapilir. Daha akilli ama yavas olabilir.';
+        prioritySelect.querySelector('option[value="0"]').disabled = false;
+        categorySelect.querySelector('option[value="auto"]').disabled = false;
+    }
+}
+
+// Sayfa yuklendiginde calistir
+document.addEventListener('DOMContentLoaded', updateAnalysisHints);
+</script>
 {% endblock %}

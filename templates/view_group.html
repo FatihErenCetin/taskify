@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ group.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Grup Bilgisi -->
+        <div class="glass-card p-4 mb-4 fade-in">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h4 class="mb-1">
+                        <i class="bi bi-people-fill text-turuncu me-2"></i>{{ group.name }}
+                    </h4>
+                    {% if group.description %}
+                    <p class="text-muted mb-0">{{ group.description }}</p>
+                    {% endif %}
+                </div>
+                {% if group.is_admin(current_user) %}
+                <div class="d-flex gap-2">
+                    <a href="/groups/{{ group.id }}/edit" class="btn btn-sm btn-outline-warning">
+                        <i class="bi bi-pencil me-1"></i>Duzenle
+                    </a>
+                    <a href="/groups/{{ group.id }}/delete"
+                       class="btn btn-sm btn-outline-danger"
+                       onclick="return confirm('Bu grubu silmek istediginizden emin misiniz?');">
+                        <i class="bi bi-trash me-1"></i>Sil
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="row text-center">
+                <div class="col-4">
+                    <div class="p-3" style="background: rgba(255,255,255,0.05); border-radius: 10px;">
+                        <h5 class="mb-0 text-turuncu">{{ group.members.count() }}</h5>
+                        <small class="text-muted">Uye</small>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-3" style="background: rgba(255,255,255,0.05); border-radius: 10px;">
+                        <h5 class="mb-0 text-turuncu">{{ group.admin.username }}</h5>
+                        <small class="text-muted">Admin</small>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-3" style="background: rgba(255,255,255,0.05); border-radius: 10px;">
+                        <h5 class="mb-0 text-turuncu">{{ group.created_at.strftime('%d.%m.%Y') }}</h5>
+                        <small class="text-muted">Olusturulma</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Uyeler Listesi -->
+        <div class="glass-card p-4 fade-in" style="animation-delay: 0.2s;">
+            <h5 class="mb-4">
+                <i class="bi bi-person-lines-fill text-turuncu me-2"></i>Grup Uyeleri
+            </h5>
+
+            {% if group.members.count() > 0 %}
+            <div class="table-responsive">
+                <table class="table table-glass mb-0">
+                    <thead>
+                        <tr>
+                            <th>Kullanici</th>
+                            <th>E-posta</th>
+                            <th>Rol</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Admin -->
+                        <tr>
+                            <td>
+                                <i class="bi bi-person-circle text-turuncu me-2"></i>
+                                {{ group.admin.username }}
+                            </td>
+                            <td class="text-muted">{{ group.admin.email }}</td>
+                            <td><span class="badge bg-turuncu">Admin</span></td>
+                        </tr>
+                        <!-- Uyeler -->
+                        {% for member in group.members %}
+                        <tr>
+                            <td>
+                                <i class="bi bi-person me-2"></i>
+                                {{ member.username }}
+                            </td>
+                            <td class="text-muted">{{ member.email }}</td>
+                            <td><span class="badge bg-secondary">Uye</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-person-x text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-2 mb-0">Henuz grup uyesi eklenmemis.</p>
+                {% if group.is_admin(current_user) %}
+                <a href="/groups/{{ group.id }}/edit" class="btn btn-turuncu btn-sm mt-3">
+                    <i class="bi bi-person-plus me-1"></i>Uye Ekle
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Hizli Islemler -->
+        <div class="glass-card p-4 mb-4 fade-in" style="animation-delay: 0.3s;">
+            <h6 class="mb-3">
+                <i class="bi bi-lightning text-turuncu me-2"></i>Hizli Islemler
+            </h6>
+
+            {% if group.is_admin(current_user) %}
+            <a href="/tasks/add" class="btn btn-turuncu w-100 mb-2">
+                <i class="bi bi-plus-circle me-2"></i>Gruba Gorev Ata
+            </a>
+            <a href="/groups/{{ group.id }}/edit" class="btn btn-glass w-100 mb-2">
+                <i class="bi bi-person-plus me-2"></i>Uye Yonet
+            </a>
+            {% endif %}
+
+            <a href="/groups" class="btn btn-glass w-100">
+                <i class="bi bi-arrow-left me-2"></i>Tum Gruplar
+            </a>
+        </div>
+
+        <!-- Bilgi -->
+        {% if group.is_admin(current_user) %}
+        <div class="glass-card p-4 fade-in" style="animation-delay: 0.4s;">
+            <h6 class="mb-3">
+                <i class="bi bi-info-circle text-turuncu me-2"></i>Admin Bilgisi
+            </h6>
+            <p class="small text-muted mb-0">
+                Bu grubun adminisisiniz. Gorev ekleme sayfasindan grup uyelerinize gorev atayabilirsiniz.
+                Gorevler atanan kisinin gorev listesinde gorunur.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

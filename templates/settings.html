@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block title %}Ayarlar{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <!-- Baslik -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="section-title mb-0">
+                <i class="bi bi-gear me-2"></i>Ayarlar
+            </h1>
+            <a href="/profile" class="btn btn-glass">
+                <i class="bi bi-person me-1"></i>Profile Don
+            </a>
+        </div>
+
+        <!-- Profil Bilgileri -->
+        <div class="card glass-card fade-in mb-4">
+            <div class="card-header card-header-turuncu">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-circle me-2"></i>Profil Bilgileri
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="/settings/profile">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label for="username" class="form-label">
+                                <i class="bi bi-person me-1"></i>Kullanici Adi
+                            </label>
+                            <input type="text"
+                                   class="form-control form-control-glass"
+                                   id="username"
+                                   name="username"
+                                   value="{{ current_user.username }}"
+                                   required>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label for="email" class="form-label">
+                                <i class="bi bi-envelope me-1"></i>E-posta
+                            </label>
+                            <input type="email"
+                                   class="form-control form-control-glass"
+                                   id="email"
+                                   name="email"
+                                   value="{{ current_user.email }}"
+                                   required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-turuncu">
+                        <i class="bi bi-check-circle me-2"></i>Profili Guncelle
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sifre Degistir -->
+        <div class="card glass-card fade-in mb-4" style="animation-delay: 0.1s;">
+            <div class="card-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">
+                <h5 class="mb-0 text-white">
+                    <i class="bi bi-shield-lock me-2"></i>Sifre Degistir
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="/settings/password">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <div class="mb-4">
+                        <label for="current_password" class="form-label">
+                            <i class="bi bi-key me-1"></i>Mevcut Sifre
+                        </label>
+                        <input type="password"
+                               class="form-control form-control-glass"
+                               id="current_password"
+                               name="current_password"
+                               placeholder="Mevcut sifrenizi girin"
+                               required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label for="new_password" class="form-label">
+                                <i class="bi bi-lock me-1"></i>Yeni Sifre
+                            </label>
+                            <input type="password"
+                                   class="form-control form-control-glass"
+                                   id="new_password"
+                                   name="new_password"
+                                   placeholder="Yeni sifrenizi girin"
+                                   minlength="6"
+                                   required>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label for="new_password_confirm" class="form-label">
+                                <i class="bi bi-lock-fill me-1"></i>Yeni Sifre (Tekrar)
+                            </label>
+                            <input type="password"
+                                   class="form-control form-control-glass"
+                                   id="new_password_confirm"
+                                   name="new_password_confirm"
+                                   placeholder="Yeni sifreyi tekrarlayin"
+                                   minlength="6"
+                                   required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-shield-check me-2"></i>Sifreyi Degistir
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tercihler -->
+        <div class="card glass-card fade-in mb-4" style="animation-delay: 0.2s;">
+            <div class="card-header card-header-turuncu">
+                <h5 class="mb-0">
+                    <i class="bi bi-sliders me-2"></i>Tercihler
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="/settings/preferences">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <div class="row">
+                        <!-- Dil Secimi -->
+                        <div class="col-md-6 mb-4">
+                            <label for="language" class="form-label">
+                                <i class="bi bi-globe me-1"></i>Dil / Language
+                            </label>
+                            <select class="form-select form-select-glass" id="language" name="language">
+                                <option value="tr" {% if current_user.preferred_language == 'tr' %}selected{% endif %}>
+                                    🇹🇷 Turkce
+                                </option>
+                                <option value="en" {% if current_user.preferred_language == 'en' %}selected{% endif %}>
+                                    🇬🇧 English
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <!-- AI Ozellikleri -->
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-robot me-1"></i>AI Ozellikleri
+                            </label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       id="ai_enabled"
+                                       name="ai_enabled"
+                                       {% if current_user.ai_features_enabled %}checked{% endif %}
+                                       style="width: 3em; height: 1.5em;">
+                                <label class="form-check-label ms-2" for="ai_enabled">
+                                    {% if current_user.ai_features_enabled %}
+                                        <span class="text-success">Aktif</span>
+                                    {% else %}
+                                        <span class="text-muted">Kapali</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Yapay zeka destekli kategori ve oncelik tahmini
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-turuncu">
+                        <i class="bi bi-check-circle me-2"></i>Tercihleri Kaydet
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Hesap Bilgileri -->
+        <div class="card glass-card fade-in mb-4" style="animation-delay: 0.3s;">
+            <div class="card-header" style="background: linear-gradient(135deg, #6c757d, #495057);">
+                <h5 class="mb-0 text-white">
+                    <i class="bi bi-info-circle me-2"></i>Hesap Bilgileri
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <small class="text-muted d-block">Hesap Olusturma</small>
+                        <span>
+                            <i class="bi bi-calendar-event me-1 text-turuncu"></i>
+                            {{ current_user.created_at.strftime('%d.%m.%Y %H:%M') }}
+                        </span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <small class="text-muted d-block">Hesap Tipi</small>
+                        <span>
+                            {% if current_user.is_admin() %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-shield-fill me-1"></i>Admin
+                                </span>
+                            {% else %}
+                                <span class="badge bg-primary">
+                                    <i class="bi bi-person-fill me-1"></i>Kullanici
+                                </span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <small class="text-muted d-block">Kullanici ID</small>
+                        <span class="text-muted">#{{ current_user.id }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tehlikeli Bolge -->
+        <div class="card glass-card fade-in" style="animation-delay: 0.4s; border: 1px solid rgba(220, 53, 69, 0.3);">
+            <div class="card-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">
+                <h5 class="mb-0 text-white">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Tehlikeli Bolge
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted mb-3">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    Bu islemler geri alinamaz. Dikkatli olun!
+                </p>
+                
+                <div class="d-flex flex-wrap gap-3">
+                    <button type="button" 
+                            class="btn btn-outline-warning"
+                            onclick="clearAllTasks()">
+                        <i class="bi bi-trash me-1"></i>Tum Gorevleri Sil
+                    </button>
+                    
+                    <button type="button" 
+                            class="btn btn-outline-danger"
+                            onclick="deleteAccount()">
+                        <i class="bi bi-person-x me-1"></i>Hesabi Sil
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// AI switch label güncelleme
+document.getElementById('ai_enabled').addEventListener('change', function() {
+    const label = this.nextElementSibling;
+    if (this.checked) {
+        label.innerHTML = '<span class="text-success">Aktif</span>';
+    } else {
+        label.innerHTML = '<span class="text-muted">Kapali</span>';
+    }
+});
+
+function clearAllTasks() {
+    if (confirm('Tum gorevleriniz silinecek. Bu islem geri alinamaz!\n\nDevam etmek istiyor musunuz?')) {
+        if (confirm('EMIN MISINIZ? Bu islem kalici olarak tum gorevlerinizi silecektir!')) {
+            window.location.href = '/settings/clear-tasks';
+        }
+    }
+}
+
+function deleteAccount() {
+    if (confirm('Hesabiniz ve tum verileriniz kalici olarak silinecek!\n\nBu islem GERI ALINAMAZ!\n\nDevam etmek istiyor musunuz?')) {
+        const confirmation = prompt('Hesabinizi silmek icin kullanici adinizi yazin:');
+        if (confirmation === '{{ current_user.username }}') {
+            window.location.href = '/settings/delete-account';
+        } else {
+            alert('Kullanici adi eslesmiyor. Islem iptal edildi.');
+        }
+    }
+}
+</script>
+{% endblock %}

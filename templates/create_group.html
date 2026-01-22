@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Yeni Grup Olustur{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="card glass-card fade-in">
+            <div class="card-header card-header-turuncu">
+                <h4 class="mb-0">
+                    <i class="bi bi-people-fill me-2"></i>Yeni Grup Olustur
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="/groups/create">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <!-- Grup Adi -->
+                    <div class="mb-4">
+                        <label for="name" class="form-label">
+                            <i class="bi bi-tag me-1"></i>
+                            <strong>Grup Adi</strong>
+                        </label>
+                        <input type="text"
+                               class="form-control form-control-glass"
+                               id="name"
+                               name="name"
+                               placeholder="Orn: Proje Ekibi, Aile, Calisma Grubu"
+                               required>
+                    </div>
+
+                    <!-- Aciklama -->
+                    <div class="mb-4">
+                        <label for="description" class="form-label">
+                            <i class="bi bi-text-paragraph me-1"></i>
+                            <strong>Aciklama</strong>
+                            <small class="text-muted">(opsiyonel)</small>
+                        </label>
+                        <textarea class="form-control form-control-glass"
+                                  id="description"
+                                  name="description"
+                                  rows="2"
+                                  placeholder="Grup hakkinda kisa bir aciklama..."></textarea>
+                    </div>
+
+                    <!-- Uye Secimi -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-person-plus me-1"></i>
+                            <strong>Uyeleri Sec</strong>
+                        </label>
+                        <div class="form-text mb-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Gruba eklemek istediginiz kullanicilari secin. Siz otomatik olarak grup admini olacaksiniz.
+                        </div>
+
+                        {% if users %}
+                        <div class="row">
+                            {% for user in users %}
+                            <div class="col-md-6 mb-2">
+                                <div class="glass-card p-3 d-flex align-items-center" style="background: rgba(255,255,255,0.03);">
+                                    <input class="form-check-input mt-0 me-3 flex-shrink-0"
+                                           type="checkbox"
+                                           name="members"
+                                           value="{{ user.id }}"
+                                           id="user_{{ user.id }}"
+                                           style="width: 1.2em; height: 1.2em;">
+                                    <label class="form-check-label flex-grow-1 mb-0" for="user_{{ user.id }}" style="cursor: pointer;">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>
+                                                <i class="bi bi-person-circle me-2 text-turuncu"></i>
+                                                {{ user.username }}
+                                            </span>
+                                            <small class="text-muted">{{ user.email }}</small>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Henuz sistemde baska kullanici yok. Grup olusturabilirsiniz ancak baska kullanicilari davet edemezsiniz.
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Butonlar -->
+                    <div class="d-flex gap-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                        <button type="submit" class="btn btn-turuncu">
+                            <i class="bi bi-check-circle me-2"></i>Grubu Olustur
+                        </button>
+                        <a href="/groups" class="btn btn-glass">
+                            <i class="bi bi-x-circle me-2"></i>Iptal
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bilgi Kutusu -->
+        <div class="glass-card p-4 mt-4 fade-in" style="animation-delay: 0.2s;">
+            <h5 class="mb-3">
+                <i class="bi bi-lightbulb text-turuncu me-2"></i>Grup Sistemi Nasil Calisir?
+            </h5>
+            <ul class="mb-0 small text-muted">
+                <li class="mb-2">
+                    <i class="bi bi-check text-success me-1"></i>
+                    Grup olusturdugunda otomatik olarak <strong>grup admini</strong> olursun.
+                </li>
+                <li class="mb-2">
+                    <i class="bi bi-check text-success me-1"></i>
+                    Sadece grup uyelerine gorev atayabilirsin.
+                </li>
+                <li class="mb-2">
+                    <i class="bi bi-check text-success me-1"></i>
+                    Grup uyeleri sana atanan gorevleri gorebilir.
+                </li>
+                <li>
+                    <i class="bi bi-check text-success me-1"></i>
+                    Istedigin zaman gruba yeni uye ekleyebilir veya cikarabilirsin.
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,3 +1,51 @@
-flask
-flask_sqlalchemy
-flask-login
+# ============================================================
+# Taskify - Dependencies
+# ============================================================
+
+# === Core Framework ===
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# === Database ===
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.23
+
+# === Authentication ===
+Flask-Login==0.6.3
+
+# === Security ===
+Flask-WTF==1.2.1
+
+# === Internationalization ===
+Flask-Babel==4.0.0
+Babel==2.14.0
+
+# === Utilities ===
+python-dateutil==2.8.2
+
+
+# ============================================================
+# AI/NLP Features (Optional)
+# ============================================================
+# Bu paketler AI ozelliklerini aktif eder.
+# Eger AI istemiyorsaniz asagidaki satirlari yorum satirina cevirebilirsiniz.
+#
+# Not: transformers ve torch toplam ~2.5GB disk alani gerektirir.
+# CPU-only torch icin: pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+transformers>=4.36.0
+torch>=2.0.0
+deep-translator>=1.11.4
+dateparser>=1.2.0
+
+
+# ============================================================
+# Development Dependencies (Optional)
+# ============================================================
+# Test ve kod kalitesi icin:
+# pip install pytest pytest-flask flake8 black
+
+# pytest>=7.0.0
+# pytest-flask>=1.2.0
+# flake8>=6.0.0
+# black>=23.0.0

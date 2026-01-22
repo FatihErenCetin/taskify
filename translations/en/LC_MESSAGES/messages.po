@@ -1,0 +1,394 @@
+# English translations for Smart Task Manager
+# Copyright (C) 2025
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Smart Task Manager 1.0\n"
+"Language: en\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+# ==========================================
+# AUTHENTICATION
+# ==========================================
+
+msgid "login_required"
+msgstr "Please log in to access this page."
+
+msgid "login_success"
+msgstr "Welcome back, %(username)s!"
+
+msgid "login_error"
+msgstr "Invalid username or password!"
+
+msgid "logout_success"
+msgstr "You have been logged out successfully."
+
+msgid "register_success"
+msgstr "Registration successful! You can now log in."
+
+msgid "password_mismatch"
+msgstr "Passwords do not match!"
+
+msgid "username_taken"
+msgstr "This username is already taken!"
+
+msgid "email_taken"
+msgstr "This email is already registered!"
+
+# ==========================================
+# TASKS
+# ==========================================
+
+msgid "task_added"
+msgstr "Task added successfully!"
+
+msgid "task_updated"
+msgstr "Task updated successfully!"
+
+msgid "task_deleted"
+msgstr "Task deleted."
+
+msgid "task_completed"
+msgstr "Task completed!"
+
+msgid "task_uncompleted"
+msgstr "Task marked as active."
+
+msgid "access_denied"
+msgstr "You don't have permission to access this task!"
+
+# ==========================================
+# NAVIGATION
+# ==========================================
+
+msgid "nav_home"
+msgstr "Home"
+
+msgid "nav_tasks"
+msgstr "My Tasks"
+
+msgid "nav_add_task"
+msgstr "New Task"
+
+msgid "nav_stats"
+msgstr "Statistics"
+
+msgid "nav_settings"
+msgstr "Settings"
+
+msgid "nav_about"
+msgstr "About"
+
+msgid "nav_contact"
+msgstr "Contact"
+
+msgid "nav_login"
+msgstr "Login"
+
+msgid "nav_register"
+msgstr "Register"
+
+msgid "nav_logout"
+msgstr "Logout"
+
+msgid "nav_profile"
+msgstr "Profile"
+
+# ==========================================
+# FORMS
+# ==========================================
+
+msgid "form_username"
+msgstr "Username"
+
+msgid "form_email"
+msgstr "Email"
+
+msgid "form_password"
+msgstr "Password"
+
+msgid "form_password_confirm"
+msgstr "Confirm Password"
+
+msgid "form_title"
+msgstr "Title"
+
+msgid "form_description"
+msgstr "Description"
+
+msgid "form_category"
+msgstr "Category"
+
+msgid "form_priority"
+msgstr "Priority"
+
+msgid "form_deadline"
+msgstr "Deadline"
+
+msgid "form_submit"
+msgstr "Submit"
+
+msgid "form_save"
+msgstr "Save"
+
+msgid "form_cancel"
+msgstr "Cancel"
+
+msgid "form_use_nlp"
+msgstr "Auto Analysis (NLP)"
+
+msgid "form_auto"
+msgstr "Automatic"
+
+# ==========================================
+# CATEGORIES
+# ==========================================
+
+msgid "category_work"
+msgstr "Work"
+
+msgid "category_personal"
+msgstr "Personal"
+
+msgid "category_health"
+msgstr "Health"
+
+msgid "category_education"
+msgstr "Education"
+
+msgid "category_finance"
+msgstr "Finance"
+
+msgid "category_general"
+msgstr "General"
+
+msgid "category_auto"
+msgstr "Auto (NLP)"
+
+# ==========================================
+# PRIORITIES
+# ==========================================
+
+msgid "priority_high"
+msgstr "High"
+
+msgid "priority_normal"
+msgstr "Normal"
+
+msgid "priority_low"
+msgstr "Low"
+
+msgid "priority_auto"
+msgstr "Auto (NLP)"
+
+# ==========================================
+# TASK LIST
+# ==========================================
+
+msgid "tasks_active"
+msgstr "Active Tasks"
+
+msgid "tasks_completed"
+msgstr "Completed Tasks"
+
+msgid "tasks_empty"
+msgstr "No tasks yet."
+
+msgid "tasks_no_completed"
+msgstr "No completed tasks."
+
+msgid "task_due"
+msgstr "Due Date"
+
+msgid "task_created"
+msgstr "Created"
+
+msgid "task_edit"
+msgstr "Edit"
+
+msgid "task_delete"
+msgstr "Delete"
+
+msgid "task_complete"
+msgstr "Complete"
+
+msgid "task_undo"
+msgstr "Undo"
+
+# ==========================================
+# DEADLINE ALERTS
+# ==========================================
+
+msgid "deadline_overdue"
+msgstr "Overdue!"
+
+msgid "deadline_today"
+msgstr "Due today!"
+
+msgid "deadline_tomorrow"
+msgstr "Due tomorrow!"
+
+msgid "deadline_soon"
+msgstr "%(days)s days left"
+
+msgid "deadline_this_week"
+msgstr "This week"
+
+# ==========================================
+# STATISTICS
+# ==========================================
+
+msgid "stats_title"
+msgstr "My Statistics"
+
+msgid "stats_completion_rate"
+msgstr "Completion Rate"
+
+msgid "stats_total_tasks"
+msgstr "Total Tasks"
+
+msgid "stats_completed_tasks"
+msgstr "Completed"
+
+msgid "stats_active_tasks"
+msgstr "Active"
+
+msgid "stats_overdue_tasks"
+msgstr "Overdue"
+
+msgid "stats_focus_score"
+msgstr "Focus Score"
+
+msgid "stats_most_planned"
+msgstr "Most Planned"
+
+msgid "stats_most_completed"
+msgstr "Most Completed"
+
+msgid "stats_weekly_completed"
+msgstr "Completed This Week"
+
+msgid "stats_streak"
+msgstr "Streak"
+
+msgid "stats_streak_days"
+msgstr "days"
+
+msgid "stats_ai_comment"
+msgstr "AI Feedback"
+
+msgid "stats_category_breakdown"
+msgstr "Category Breakdown"
+
+msgid "stats_weekly_progress"
+msgstr "Weekly Progress"
+
+msgid "stats_upcoming"
+msgstr "Upcoming Deadlines"
+
+# ==========================================
+# SETTINGS
+# ==========================================
+
+msgid "settings_title"
+msgstr "Settings"
+
+msgid "settings_language"
+msgstr "Language"
+
+msgid "settings_ai_features"
+msgstr "AI Features"
+
+msgid "settings_ai_enabled"
+msgstr "Enable AI features"
+
+msgid "settings_saved"
+msgstr "Settings saved."
+
+# ==========================================
+# PAGES
+# ==========================================
+
+msgid "page_home"
+msgstr "Home"
+
+msgid "page_login"
+msgstr "Login"
+
+msgid "page_register"
+msgstr "Register"
+
+msgid "page_tasks"
+msgstr "My Tasks"
+
+msgid "page_add_task"
+msgstr "Add New Task"
+
+msgid "page_edit_task"
+msgstr "Edit Task"
+
+msgid "page_stats"
+msgstr "Statistics"
+
+msgid "page_settings"
+msgstr "Settings"
+
+msgid "page_about"
+msgstr "About Us"
+
+msgid "page_contact"
+msgstr "Contact"
+
+# ==========================================
+# CONFIRMATIONS
+# ==========================================
+
+msgid "confirm_delete"
+msgstr "Are you sure you want to delete this task?"
+
+msgid "confirm_logout"
+msgstr "Are you sure you want to log out?"
+
+# ==========================================
+# ERRORS
+# ==========================================
+
+msgid "error_404"
+msgstr "Page not found!"
+
+msgid "error_404_message"
+msgstr "The page you're looking for doesn't exist or has been moved."
+
+msgid "error_500"
+msgstr "Server error!"
+
+msgid "error_500_message"
+msgstr "Something went wrong. Please try again later."
+
+msgid "error_go_home"
+msgstr "Go to Home Page"
+
+# ==========================================
+# MISC
+# ==========================================
+
+msgid "welcome_message"
+msgstr "Welcome to Smart Task Manager!"
+
+msgid "welcome_subtitle"
+msgstr "Organize your tasks with NLP-powered management."
+
+msgid "language"
+msgstr "Language"
+
+msgid "turkish"
+msgstr "Turkish"
+
+msgid "english"
+msgstr "English"
+
+msgid "ai_powered"
+msgstr "AI Powered"
+
+msgid "analyzed_by"
+msgstr "Analysis: %(source)s"
